@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1d4ed8">
+<meta name="description" content="Tamir Asistanı — telefon sürümü (tepe kamerası)">
+<title>Tamir Asistanı</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="ikon-192.png">
+<link rel="apple-touch-icon" href="ikon-192.png">
+<style>
+:root{--bg:#f4f6fa;--panel:#fff;--yazi:#141a26;--soluk:#5b6577;--kenar:#d5dbe6;--vurgu:#1d4ed8;--asistan:#e8eefc;--uyari:#92400e;--uyari-bg:#fef3c7;--iyi:#15803d;--kotu:#b91c1c;--hata-bg:#fee2e2;--ikinci:#f3e8ff;--ikinci-k:#7c3aed}
+@media (prefers-color-scheme:dark){:root{--bg:#0e1320;--panel:#161c2b;--yazi:#e8ecf4;--soluk:#a3afc2;--kenar:#2c3652;--vurgu:#3b6fe0;--asistan:#1d2742;--uyari:#fbbf24;--uyari-bg:#33290f;--iyi:#4ade80;--kotu:#f87171;--hata-bg:#3b1515;--ikinci:#2a1f45;--ikinci-k:#c4b5fd}}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--yazi);font:16px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-tap-highlight-color:transparent}
+body{display:flex;flex-direction:column;height:100dvh;padding:env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left)}
+button,select,input,textarea{font:inherit;color:inherit}
+button{border:1px solid var(--kenar);background:var(--panel);border-radius:10px;padding:8px 12px;min-height:44px;cursor:pointer;white-space:nowrap}
+button:disabled{opacity:.45}
+button.ana{background:var(--vurgu);border-color:var(--vurgu);color:#fff;font-weight:600}
+button.tehlike{border-color:var(--kotu);color:var(--kotu)}
+button.aktif{background:var(--asistan);border-color:var(--vurgu)}
+input,select,textarea{border:1px solid var(--kenar);background:var(--bg);border-radius:10px;padding:9px 10px;min-height:44px;width:100%}
+header{display:flex;align-items:center;gap:6px;padding:6px 8px;background:var(--panel);border-bottom:1px solid var(--kenar)}
+header h1{font-size:16px;margin:0;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rozet{display:inline-block;padding:2px 9px;border-radius:99px;font-size:12px;font-weight:600;border:1px solid var(--vurgu);background:var(--asistan);white-space:nowrap}
+.rozet.ref{background:#fde68a;color:#78350f;border-color:#d97706}
+#bildirim{padding:8px 10px;font-weight:600;font-size:14px;display:flex;gap:8px;align-items:flex-start;background:var(--asistan)}
+#bildirim.uyari{background:var(--uyari-bg);color:var(--uyari)}#bildirim.hata{background:var(--hata-bg);color:var(--kotu)}
+#bildirim[hidden]{display:none}#bildirim span{flex:1}#bildirim button{min-height:30px;padding:0 10px}
+#kamAlan{position:relative;background:#000;flex:none;height:38dvh;overflow:hidden}
+#kamAlan.buyuk{height:62dvh}
+#video,#donmus{width:100%;height:100%;object-fit:contain;display:block}
+#donmus{position:absolute;inset:0;background:#000}
+#donmus[hidden]{display:none}
+#kamYok{position:absolute;inset:0;display:flex;flex-direction:column;gap:10px;align-items:center;justify-content:center;color:#cbd5e1;text-align:center;padding:16px}
+#kamYok[hidden]{display:none}
+.kamDugme{position:absolute;display:flex;gap:6px}
+.kamDugme button{background:rgba(15,20,30,.65);color:#fff;border-color:rgba(255,255,255,.25);min-width:44px;padding:6px 10px}
+#kamUst{top:6px;right:6px}
+#kamSol{top:6px;left:6px}
+#zoomKutu{position:absolute;bottom:6px;left:8px;right:8px;display:flex;gap:8px;align-items:center;color:#fff;font-size:13px}
+#zoomKutu[hidden]{display:none}
+#zoomKutu input{flex:1;min-height:auto;padding:0;background:transparent;border:0}
+#netlik{position:absolute;top:56px;left:8px;font-size:12px;color:#fff;background:rgba(0,0,0,.5);padding:1px 6px;border-radius:6px}
+#mesajlar{flex:1;overscroll-behavior:contain;min-height:0;overflow:auto;padding:10px;display:flex;flex-direction:column;gap:8px}
+.m{max-width:92%;padding:8px 11px;border-radius:12px;white-space:pre-wrap;word-wrap:break-word;font-size:15px}
+.m small{display:block;color:var(--soluk);font-size:11px;margin-top:2px}
+.m.asistan{align-self:flex-start;background:var(--asistan)}
+.m.kullanici{align-self:flex-end;background:var(--vurgu);color:#fff}.m.kullanici small{color:#dbe6ff}
+.m.sistem{align-self:center;background:transparent;color:var(--soluk);font-size:13px;text-align:center}
+.m.guvenlik{background:var(--uyari-bg);color:var(--uyari);border:1px solid var(--uyari);font-weight:600}
+.m.ikinci{align-self:stretch;max-width:100%;background:var(--ikinci);border:1px solid var(--ikinci-k)}
+.m.rapor{align-self:stretch;max-width:100%;background:var(--panel);border:1px solid var(--kenar);font-family:ui-monospace,monospace;font-size:12px}
+.m.olcum{align-self:flex-start;background:var(--panel);border:1px solid var(--kenar);display:flex;gap:8px;align-items:center}
+.m.olcum img{width:72px;aspect-ratio:4/3;object-fit:cover;border-radius:6px}
+.m.olcum.red{opacity:.6;border-style:dashed}
+.m img.foto{width:160px;aspect-ratio:4/3;object-fit:cover;border-radius:8px;display:block;margin-bottom:4px}
+.deger{font-size:18px;font-weight:700}.iyi{color:var(--iyi)}.kotu{color:var(--kotu)}
+#kontrol{flex:none;background:var(--panel);border-top:1px solid var(--kenar);padding:8px;display:flex;flex-direction:column;gap:6px;padding-bottom:calc(8px + env(safe-area-inset-bottom))}
+#adim{font-size:16px;font-weight:600;line-height:1.3}
+#adim small{display:block;font-size:12px;font-weight:400;color:var(--soluk)}
+.serit{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
+.serit::-webkit-scrollbar{display:none}
+.serit button{flex:none}
+.giris{display:flex;gap:6px}
+.giris input{flex:1;min-width:0}
+#konusBtn.dinliyor{background:var(--kotu);border-color:var(--kotu);color:#fff}
+.modalArka{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:20;display:flex;align-items:flex-end;justify-content:center}
+.modalArka[hidden]{display:none}
+.kutu{background:var(--panel);width:100%;max-width:640px;max-height:92dvh;overflow:auto;border-radius:16px 16px 0 0;padding:14px 14px calc(14px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:10px}
+.kutu h3{margin:0;font-size:18px}
+.kutu p{margin:0;color:var(--soluk);font-size:14px}
+.kutu label.alan{display:flex;flex-direction:column;gap:4px;font-weight:600;font-size:14px}
+.kutu label.alan input,.kutu label.alan select,.kutu label.alan textarea{font-weight:400}
+.kutu label.tik{display:flex;gap:8px;align-items:flex-start;font-size:15px}
+.kutu label.tik input{width:22px;min-height:22px;flex:none;margin-top:1px}
+.dugmeler{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.iki{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.kl{display:flex;flex-direction:column;gap:8px}
+.kl .satir{display:flex;flex-direction:column;gap:4px;border-bottom:1px solid var(--kenar);padding-bottom:6px}
+.kl .secim{display:flex;gap:4px}
+.kl .secim button{flex:1;min-height:38px;padding:4px}
+.kl .secim button.sec{background:var(--asistan);border-color:var(--vurgu);font-weight:700}
+.kl .secim button.sec.var{background:var(--hata-bg);border-color:var(--kotu)}
+.hip{margin-bottom:8px}.hipb{display:flex;justify-content:space-between;gap:8px;font-size:14px}
+.cubuk{height:7px;border-radius:4px;background:var(--kenar);margin:3px 0}.cubuk div{height:100%;border-radius:4px;background:var(--vurgu)}
+.oge{border:1px solid var(--kenar);border-radius:10px;padding:8px 10px;margin-bottom:6px}
+.oge b{display:block}.oge small{color:var(--soluk)}
+.parca{display:grid;grid-template-columns:1fr 1fr 44px;gap:6px}
+table{width:100%;border-collapse:collapse;font-size:13px}td,th{padding:4px;border-bottom:1px solid var(--kenar);text-align:left;vertical-align:top}
+#menu{position:fixed;right:8px;top:52px;z-index:25;background:var(--panel);border:1px solid var(--kenar);border-radius:12px;padding:6px;display:flex;flex-direction:column;gap:4px;box-shadow:0 8px 24px rgba(0,0,0,.25)}
+#menu[hidden]{display:none}
+#menu button{text-align:left}
+.gizli,[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<header>
+  <button id="menuBtn" aria-label="Menü">☰</button>
+  <h1 id="baslik">Tamir Asistanı</h1>
+  <span id="refRozet" class="rozet ref" hidden>REFERANS</span>
+  <span id="fazRozet" class="rozet">Faz</span>
+  <button id="hipBtn" aria-label="Hipotezler">🧩</button>
+</header>
+<div id="menu" hidden>
+  <button data-m="yeni">＋ Yeni tamir</button>
+  <button data-m="cihaz">✎ Cihaz / kart bilgisi</button>
+  <button data-m="kontrol">📋 Görsel kontrol listesi</button>
+  <button data-m="faz">⇄ Faz değiştir</button>
+  <button data-m="referans">⭐ Sağlam kart (referans) modu</button>
+  <button data-m="ikinci">🧠 Bağımsız ikinci görüş</button>
+  <button data-m="kapanis">🏁 Tamiri kapat / rapor</button>
+  <button data-m="gecmis">🗂 Geçmiş tamirler</button>
+  <button data-m="ayar">⚙ Ayarlar ve anahtarlar</button>
+</div>
+<div id="bildirim" hidden><span></span><button id="bildirimKapat" aria-label="Kapat">✕</button></div>
+<div id="kamAlan">
+  <video id="video" playsinline muted autoplay></video>
+  <img id="donmus" alt="Gönderilen kare" hidden>
+  <div id="kamYok"><div>Kamera kapalı</div><button class="ana" id="kamAcBtn">📷 Kamerayı aç</button></div>
+  <div class="kamDugme" id="kamSol"><button id="buyutBtn" aria-label="Görüntüyü büyüt">⤢</button></div>
+  <div class="kamDugme" id="kamUst">
+    <button id="fenerBtn" aria-label="Fener" hidden>🔦</button>
+    <button id="cevirBtn" aria-label="Ön / arka kamera">🔄</button>
+  </div>
+  <span id="netlik" hidden></span>
+  <div id="zoomKutu" hidden>🔍<input id="zoom" type="range" min="1" max="1" step="0.1" value="1" aria-label="Yakınlaştırma"><span id="zoomDeger">1×</span></div>
+</div>
+<div id="mesajlar" aria-live="polite"></div>
+<div id="kontrol">
+  <div id="adim">Hazırlanıyor…</div>
+  <div class="serit" id="cipler"></div>
+  <div class="giris">
+    <input id="metin" placeholder="Yazın: soru, değer (ör. 5,02 V) …" enterkeyhint="send" autocomplete="off">
+    <button id="konusBtn" aria-label="Konuş">🎙</button>
+    <button class="ana" id="gonderBtn">Gönder</button>
+  </div>
+  <div class="serit">
+    <button id="tamamBtn" class="ana">📷 Tamam / çek</button>
+    <button id="degerBtn">✍ Değeri yaz</button>
+    <button id="ustaBtn">❓ Usta'ya sor</button>
+    <button id="tekrarBtn">🔁 Tekrar</button>
+    <button id="iptalBtn" class="tehlike" hidden>✕ İptal</button>
+    <button id="sesBtn" aria-label="Sesli okuma">🔊</button>
+  </div>
+</div>
+
+<div class="modalArka" id="modal" hidden><div class="kutu" id="modalKutu" role="dialog" aria-modal="true"></div></div>
+<input type="file" id="dosya" accept="image/*" capture="environment" hidden>
+<script src="app.js"></script>
+</body>
+</html>

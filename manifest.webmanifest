@@ -1,0 +1,38 @@
+{
+  "name": "Tamir Asistanı",
+  "short_name": "Tamir",
+  "description": "Elektronik kart tamirinde adım adım ölçüm asistanı (telefon kamerası tepe kamerası olarak)",
+  "lang": "tr",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0e1320",
+  "theme_color": "#1d4ed8",
+  "icons": [
+    {
+      "src": "ikon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "ikon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "ikon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "id": "./",
+  "categories": [
+    "productivity",
+    "utilities",
+    "medical"
+  ]
+}

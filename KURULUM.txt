@@ -1,0 +1,48 @@
+TAMİR ASİSTANI — TELEFON (ANDROID) SÜRÜMÜ
+=========================================
+
+Ne yapar?
+- Telefonun arka kamerası TEPE KAMERASI olur (mikroskop yok). 🔄 ile ön/arka kamera değişir,
+  destekleyen telefonlarda 🔦 fener ve 🔍 yakınlaştırma çıkar, ⤢ ile görüntü büyür.
+- Masaüstüyle aynı akış: cihaz bilgisi → kartın fotoğrafı → görsel kontrol listesi → fazlar
+  (enerjisiz → akım sınırlı ilk enerji → enerjili → doğrulama) → ölçüm → değer teyidi → hipotezler.
+- "Tamam / çek": ölçü aletinin ekranını çeker, yapay zeka değeri okur, siz "Doğru / Yanlış / Doğrusunu yaz" dersiniz.
+- Değeri yazabilirsiniz: alttaki kutuya "5,02 V", "220 mΩ" gibi yazıp Gönder (mΩ ile MΩ farklıdır).
+- Usta'ya sor, bağımsız (kör) ikinci görüş, sağlam kart referans modu ve sapma uyarısı,
+  kapanış formu, rapor (paylaş: WhatsApp/e-posta/Drive), geçmiş tamirler.
+- Sesli: 🎙 basılı konuşma (tr-TR). Ayarlar'da "Eller serbest" açıksa sürekli dinler:
+  "tamam", "doğru", "yanlış", "değer 5 volt", "usta ...".
+- USB/Bluetooth ölçü aleti seçeneği görünür ama pasiftir (bağlı uyumlu alet yok).
+
+Gereken
+- Android 9 veya üstü + güncel Chrome. (Eski Galaxy Grand Neo / Android 4.x çalıştırmaz.)
+- İnternet (yapay zeka için). İnternet yokken değer yazmaya ve kaydetmeye devam edebilirsiniz.
+
+Neden bir kez kurulum gerekiyor?
+Telefonda kamera yalnızca HTTPS adresinden açılabilir. Bu yüzden klasörü ücretsiz bir
+HTTPS adresine koymak gerekir. En kolayı (5 dakika, ücretsiz, hesap gerektirmeden):
+
+1) Bilgisayarda https://app.netlify.com/drop adresini açın.
+2) Bu "telefon" klasörünü sayfaya sürükleyip bırakın.
+3) Size https://....netlify.app gibi bir adres verir. (Kalıcı olması için ücretsiz hesapla
+   "Claim" deyin; yoksa birkaç gün sonra silinir.)
+4) Telefonda Chrome ile bu adresi açın → sağ üstteki ⋮ → "Ana ekrana ekle" / "Uygulamayı yükle".
+   Artık normal bir uygulama gibi açılır.
+Alternatif: GitHub Pages (ücretsiz) — klasörü bir depoya yükleyip Pages'i açmak yeterli.
+
+İlk açılış
+- Gemini API anahtarını bir kez girin (Google AI Studio → Get API key; ücretsiz).
+  Bilgisayardaki anahtarlar Windows'a gömülü olduğu için telefon onları okuyamaz; aynı
+  anahtarı burada da kullanabilirsiniz.
+- Groq anahtarı (ücretsiz) isteğe bağlıdır; Gemini kotası dolunca yedek olarak kullanılır.
+- Claude anahtarı ÜCRETLİDİR ve isteğe bağlıdır; boş bırakabilirsiniz.
+- Anahtarlar yalnızca o telefonun tarayıcısında saklanır, sadece ilgili yapay zeka
+  servisine gider; Netlify'a veya başka bir yere gönderilmez.
+- "Bağlantıyı dene" düğmesi anahtarın çalışıp çalışmadığını gösterir.
+
+Kayıtlar
+- Tamirler telefonda saklanır (Menü → Geçmiş tamirler). Kapanışta rapor .txt ve tüm veriler
+  .json olarak paylaşılabilir. Referans (sağlam kart) değerleri de telefonda tutulur.
+- Chrome'da "site verilerini temizle" derseniz kayıtlar ve anahtarlar silinir.
+
+Hasta bilgisi içeren etiket veya ekranları kadraja almayın; görüntüler yapay zeka servisine gider.
