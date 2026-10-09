@@ -1,5 +1,5 @@
 // Uygulama kabuğunu önbelleğe alır; yapay zeka istekleri her zaman ağdan gider.
-const ONBELLEK = "tamir-tel-1.0";
+const ONBELLEK = "tamir-tel-1.2";
 const DOSYALAR = ["./", "./index.html", "./app.js", "./manifest.webmanifest", "./ikon-192.png", "./ikon-512.png"];
 self.addEventListener("install", e => { e.waitUntil(caches.open(ONBELLEK).then(c => c.addAll(DOSYALAR))); self.skipWaiting(); });
 self.addEventListener("activate", e => {

@@ -4,7 +4,7 @@
  * Anahtarlar yalnızca bu telefonun tarayıcısında saklanır; başka hiçbir sunucuya gitmez.
  */
 "use strict";
-const SURUM = "tel-1.0";
+const SURUM = "tel-1.2";
 const $ = (s, k = document) => k.querySelector(s);
 const $$ = (s, k = document) => [...k.querySelectorAll(s)];
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[c]));
@@ -230,10 +230,10 @@ function baglam(kor = false) {
   return p.join("\n\n");
 }
 /* ---------- Yapay zeka katmanı: Gemini → Groq → Claude ---------- */
-const AI_ZAMAN_ASIMI = 45000, AI_TOPLAM_SURE = 90000;
+const AI_ZAMAN_ASIMI = 45000, AI_TOPLAM_SURE = 120000;
 const VARSAYILAN_MODELLER = {
-  flash: ["gemini-flash-latest", "gemini-2.5-flash", "gemini-flash-lite-latest"],
-  pro: ["gemini-pro-latest", "gemini-2.5-pro"],
+  flash: ["gemini-3.6-flash", "gemini-3.5-flash-lite", "gemini-flash-latest"],
+  pro: ["gemini-3.1-pro", "gemini-3.1-pro-preview", "gemini-pro-latest"],
   groq: ["meta-llama/llama-4-scout-17b-16e-instruct", "meta-llama/llama-4-maverick-17b-128e-instruct"],
   claude: ["claude-sonnet-4-5", "claude-haiku-4-5"],
 };
@@ -284,7 +284,7 @@ function _sirala(a) { return a.sort((x, y) => { const p = _modelSira(x), q = _mo
 /** Günde en fazla bir kez, arka planda: hesabın gerçekten erişebildiği modelleri öğren. */
 async function modelListesiniYenile(zorla) {
   const kayit = lsOku("modeller", {});
-  if (!zorla && kayit.zaman && Date.now() - kayit.zaman < 86400e3) return;
+  if (!zorla && kayit.zaman && kayit.surum === SURUM && Date.now() - kayit.zaman < 86400e3) return;
   const yeni = Object.assign({}, VARSAYILAN_MODELLER);
   try {
     if (AYAR.gemini) {
@@ -293,7 +293,7 @@ async function modelListesiniYenile(zorla) {
         const j = await r.json();
         const adlar = (j.models || []).filter(m => (m.supportedGenerationMethods || []).includes("generateContent"))
           .map(m => m.name.replace(/^models\//, "")).filter(n => /^gemini-/.test(n) && !/tts|image|live|audio|embed|learnlm|robotics|computer|native|thinking/.test(n));
-        const flash = _sirala(adlar.filter(n => /flash/.test(n))).slice(0, 3), pro = _sirala(adlar.filter(n => /pro/.test(n))).slice(0, 2);
+        const flash = _sirala(adlar.filter(n => /flash/.test(n))).slice(0, 4), pro = _sirala(adlar.filter(n => /pro/.test(n))).slice(0, 3);
         if (flash.length) yeni.flash = flash; if (pro.length) yeni.pro = pro;
       }
     }
@@ -302,7 +302,7 @@ async function modelListesiniYenile(zorla) {
       if (r.ok) { const j = await r.json(); const g = (j.data || []).map(m => m.id).filter(n => /llama-4|vision/.test(n)); if (g.length) yeni.groq = g.sort().reverse().slice(0, 2); }
     }
   } catch (e) { console.warn("Model listesi alınamadı", e); return; }
-  MODELLER = yeni; lsYaz("modeller", {zaman: Date.now(), liste: yeni});
+  MODELLER = yeni; lsYaz("modeller", {zaman: Date.now(), surum: SURUM, liste: yeni});
 }
 
 function adaylar(tur = "ana", haric = []) {
@@ -384,6 +384,21 @@ async function aiSor({sistem, istem, resimler = [], dogrula, tur = "ana", haric 
   const bitis = Date.now() + AI_TOPLAM_SURE;
   mesgul(true, durumMetni);
   try {
+   for (let tur_no = 0; tur_no < 3; tur_no++) {
+    if (tur_no > 0) {
+      // Geçici hata (sunucu yoğun / dakikalık kota / zaman aşımı): bekleyip kısa süreli engelleri kaldırarak yeniden dene
+      const h = sonAIHatasi;
+      if (!h || !["sunucu", "kota", "zaman", "bekle", "ag"].includes(h.tur)) break;
+      const sure = tur_no === 1 ? 6 : 15;
+      if (bitis - Date.now() < (sure + 15) * 1000) break;
+      for (let k = sure; k > 0; k--) {
+        if (iptalEdildi) return null;
+        adimAlt(`Yapay zeka sunucusu yoğun; ${k} sn sonra kendim yeniden deniyorum… (İptal edebilirsiniz)`);
+        await bekle(1000);
+      }
+      const sinir = Date.now() + 70000;
+      for (const k in devre) if (devre[k].kadar < sinir) delete devre[k];
+    }
     for (const aday of liste) {
       if (iptalEdildi) return null;
       if (!acikMi(aday)) {
@@ -410,12 +425,19 @@ async function aiSor({sistem, istem, resimler = [], dogrula, tur = "ana", haric 
         } catch (e) {
           const h = e instanceof AIHata ? e : new AIHata("bilinmiyor", e.message);
           if (h.tur === "iptal") return null;
-          sonAIHatasi = h; devreAc(aday, h);
+          sonAIHatasi = h;
           console.warn("AI hatası", MODEL_ADI(aday), h.tur, h.message);
+          if (h.tur === "sunucu" && deneme === 0 && bitis - Date.now() > 10000) {   // 503 "aşırı yoğun": aynı modeli 2 sn sonra bir kez daha dene
+            adimAlt(`${MODEL_ADI(aday)} yoğun, 2 sn sonra yeniden deneniyor…`);
+            await bekle(2000);
+            continue;
+          }
+          devreAc(aday, h);
           break;
         } finally { clearTimeout(zm); }
       }
     }
+   }
     return null;
   } finally { iptalDenetleyici = null; mesgul(false); }
 }
@@ -429,6 +451,9 @@ function aiHataMesaji(ek = "") {
     else if (h.tur === "ag") m = h.message + ".";
     else if (h.tur === "kota_gunluk") m = "Ücretsiz günlük kota doldu" + (AYAR.groq ? " ve yedek modeller de yanıt vermedi." : ". Ayarlar'a ücretsiz Groq anahtarı eklerseniz yedek olarak kullanılır.");
     else if (h.tur === "kota") m = "Dakikalık sınıra takıldı; 1 dakika sonra yeniden deneyin.";
+    else if (h.tur === "sunucu" || h.tur === "zaman")
+      m = "Google'ın yapay zeka sunucuları şu an aşırı yoğun (" + h.message.replace(/^Sunucu hatası /, "hata ") + "); birkaç kez denedim, olmadı. " +
+          (AYAR.groq ? "Bir dakika sonra yeniden deneyin." : "Bir dakika sonra yeniden deneyin. Ayarlar'a ücretsiz Groq anahtarı eklerseniz bu durumda otomatik ona geçer.");
     else m = `Yapay zekadan yanıt alınamadı (${h.message}).`;
   }
   bildir(m + ek, "hata");
