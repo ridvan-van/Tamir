@@ -1,12 +1,12 @@
 {
   "name": "Tamir Asistanı",
   "short_name": "Tamir",
-  "description": "Elektronik kart tamirinde adım adım ölçüm asistanı (telefon kamerası tepe kamerası olarak)",
+  "description": "Tıbbi cihaz ve elektronik kart tamirinde adım adım arıza bulma asistanı",
   "lang": "tr",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
-  "orientation": "portrait",
+  "orientation": "any",
   "background_color": "#0e1320",
   "theme_color": "#1d4ed8",
   "icons": [

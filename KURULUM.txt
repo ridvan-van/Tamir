@@ -1,48 +1,47 @@
-TAMİR ASİSTANI — TELEFON (ANDROID) SÜRÜMÜ
-=========================================
+TAMİR ASİSTANI — WEB SÜRÜMÜ 3.1 (telefon + bilgisayar)
+=====================================================
 
-Ne yapar?
-- Telefonun arka kamerası TEPE KAMERASI olur (mikroskop yok). 🔄 ile ön/arka kamera değişir,
-  destekleyen telefonlarda 🔦 fener ve 🔍 yakınlaştırma çıkar, ⤢ ile görüntü büyür.
-- Masaüstüyle aynı akış: cihaz bilgisi → kartın fotoğrafı → görsel kontrol listesi → fazlar
-  (enerjisiz → akım sınırlı ilk enerji → enerjili → doğrulama) → ölçüm → değer teyidi → hipotezler.
-- "Tamam / çek": ölçü aletinin ekranını çeker, yapay zeka değeri okur, siz "Doğru / Yanlış / Doğrusunu yaz" dersiniz.
-- Değeri yazabilirsiniz: alttaki kutuya "5,02 V", "220 mΩ" gibi yazıp Gönder (mΩ ile MΩ farklıdır).
-- Usta'ya sor, bağımsız (kör) ikinci görüş, sağlam kart referans modu ve sapma uyarısı,
-  kapanış formu, rapor (paylaş: WhatsApp/e-posta/Drive), geçmiş tamirler.
-- Sesli: 🎙 basılı konuşma (tr-TR). Ayarlar'da "Eller serbest" açıksa sürekli dinler:
-  "tamam", "doğru", "yanlış", "değer 5 volt", "usta ...".
-- USB/Bluetooth ölçü aleti seçeneği görünür ama pasiftir (bağlı uyumlu alet yok).
+Aynı adres hem telefonda hem bilgisayarda çalışır (Chrome veya Edge).
+GitHub'a YÜKLENECEK DOSYALAR (8 adet): index.html, app.js, sw.js, manifest.webmanifest,
+ikon-192.png, ikon-512.png, KURULUM.txt, LICENSE. ("src" klasörü yalnızca kaynak koddur; yüklemeniz gerekmez.)
 
-Gereken
-- Android 9 veya üstü + güncel Chrome. (Eski Galaxy Grand Neo / Android 4.x çalıştırmaz.)
-- İnternet (yapay zeka için). İnternet yokken değer yazmaya ve kaydetmeye devam edebilirsiniz.
+3.1'DE YENİ
+1) OTOMATİK DATASHEET / SERVİS KILAVUZU
+   - Parça kodunu onayladığınızda (ör. PIC16F526) ya da cihaz modunda marka/model + hata kodu girdiğinizde
+     asistan resmî belgeyi KENDİSİ arar, açar ve okur (Gemini'nin Google araması + adres okuma araçları).
+   - Her bilgi ÇİFT DOĞRULANIR: 1. model belgeden birebir alıntıyla çıkarır, 2. (FARKLI) model değeri GÖRMEDEN
+     aynı belgeden kendisi çıkarır; program iki değeri sayı, birim, işaret ve sözcük sırasıyla birebir karşılaştırır.
+   - Yalnızca "✔ çift doğrulandı (resmî)" olan bilgi (üretici sitesindeki belge) yapay zekaya KESİN bilgi olarak gider.
+     ≈ resmî olmayan kopya, ⚠ tek model, ✖ çelişki, ⊘ başka model/sürüm: kesin bilgi DEĞİLDİR, belgeden kendiniz bakın.
+   - Cihaz kılavuzunda YAZILIM SÜRÜMÜ gereklidir (✎ Cihaz bilgisi). Sürüm girilmezse hiçbir kod anlamı kesin sayılmaz.
+   - Ayrıntı ve belge bağlantıları: Menü → 📚 Kaynaklar.
+2) ÖLÇÜM GÜVENLİĞİ
+   - Kameradan okunan her değeri İKİ ayrı model okur; teknisyen onayı ZORUNLUDUR ("doğru" deyin; "tamam" onay sayılmaz).
+   - Birimsiz yazılan değer (ör. "0,8") için "Ω olarak anlaşıldı, doğru mu?" sorulur.
+   - Diyot/direnç ölçümünde nokta "A - B" biçiminde olmalı: KIRMIZI uç A'da, SİYAH uç B'de (ör. "U7 pin 5 - GND").
+   - Faz güvenlik onayları (deşarj, ilk enerji) kapatılamaz ve rapora yazılır. Yüksek gerilimli cihazlarda
+     (defibrilatör, röntgen, elektrokoter…) multimetre yerine üretici deşarj prosedürü ve yüksek gerilim probu istenir.
+3) TEZGÂH ARAÇLARI (Menü)
+   - ⚡ Kısa devre avı: prob direnci, iki yön, sağlam kart karşılaştırması → sınıflandırma; akım enjeksiyonu rehberi
+     yalnızca ≤ 20 Ω'da ve ray kutbu biliniyorsa verilir.
+   - 🔢 Toplu ölçüm: bir entegrenin bacaklarını sırayla (iki yönde) ölçme.
+   - 📊 A/B tablosu: arızalı ↔ sağlam kart, en büyük sapma en üstte; sağlam değeri elle ekleme.
+4) KAYIT / YEDEK
+   - "Tümünü yedekle" PAROLALI (şifreli) yedek alabilir. Kapanışta ve 7 günde bir yedek hatırlatılır.
+   - Ölçü aleti ve kalibrasyon tarihi kayda/rapora yazılır; kalibrasyonu geçmiş aletle alınan değer referansa alınmaz.
+   - Aynı tamir iki pencerede açıksa eski pencere kilitlenir (veri ezilmez) — "Sayfayı yenile".
+5) HASTA VERİSİ: Fotoğraf göndermeden önce önizlemeyle onay istenir (cihaz ekranında her seferinde).
 
-Neden bir kez kurulum gerekiyor?
-Telefonda kamera yalnızca HTTPS adresinden açılabilir. Bu yüzden klasörü ücretsiz bir
-HTTPS adresine koymak gerekir. En kolayı (5 dakika, ücretsiz, hesap gerektirmeden):
+YAPAY ZEKA SIRASI
+Teşhis/analiz: Gemini 3.1 Pro → 3.8 → 3.7 → 3.6 Flash → 3.5 Flash-Lite → Groq. Belge araması yalnızca Gemini ile yapılır
+(Groq'ta web araması yok). Hepsi başarısızsa 5, 10, 20 sn bekleyip kendiliğinden yeniden dener.
 
-1) Bilgisayarda https://app.netlify.com/drop adresini açın.
-2) Bu "telefon" klasörünü sayfaya sürükleyip bırakın.
-3) Size https://....netlify.app gibi bir adres verir. (Kalıcı olması için ücretsiz hesapla
-   "Claim" deyin; yoksa birkaç gün sonra silinir.)
-4) Telefonda Chrome ile bu adresi açın → sağ üstteki ⋮ → "Ana ekrana ekle" / "Uygulamayı yükle".
-   Artık normal bir uygulama gibi açılır.
-Alternatif: GitHub Pages (ücretsiz) — klasörü bir depoya yükleyip Pages'i açmak yeterli.
+ÖNEMLİ SINIRLAR (dürüst not)
+- Yapay zeka ve belge doğrulaması hatayı AZALTIR, sıfırlamaz. Kesin karar ve sorumluluk teknisyenindir;
+  kritik pin/değer/kod anlamını belgenin kendisinden bir kez görün (bağlantı 📚 Kaynaklar'da).
+- Kayıtlar yalnızca o cihazın tarayıcısında durur: düzenli yedek alın.
+- Rapor yardımcı kayıttır; resmî servis formunun yerine geçmez.
 
-İlk açılış
-- Gemini API anahtarını bir kez girin (Google AI Studio → Get API key; ücretsiz).
-  Bilgisayardaki anahtarlar Windows'a gömülü olduğu için telefon onları okuyamaz; aynı
-  anahtarı burada da kullanabilirsiniz.
-- Groq anahtarı (ücretsiz) isteğe bağlıdır; Gemini kotası dolunca yedek olarak kullanılır.
-- Claude anahtarı ÜCRETLİDİR ve isteğe bağlıdır; boş bırakabilirsiniz.
-- Anahtarlar yalnızca o telefonun tarayıcısında saklanır, sadece ilgili yapay zeka
-  servisine gider; Netlify'a veya başka bir yere gönderilmez.
-- "Bağlantıyı dene" düğmesi anahtarın çalışıp çalışmadığını gösterir.
-
-Kayıtlar
-- Tamirler telefonda saklanır (Menü → Geçmiş tamirler). Kapanışta rapor .txt ve tüm veriler
-  .json olarak paylaşılabilir. Referans (sağlam kart) değerleri de telefonda tutulur.
-- Chrome'da "site verilerini temizle" derseniz kayıtlar ve anahtarlar silinir.
-
-Hasta bilgisi içeren etiket veya ekranları kadraja almayın; görüntüler yapay zeka servisine gider.
+İLK AÇILIŞ
+- Gemini API anahtarını bir kez girin (Google AI Studio). Groq anahtarı (ücretsiz) önerilir.
+- Anahtarlar ve kayıtlar YALNIZCA o cihazın tarayıcısında saklanır; GitHub'a gitmez. Her kullanıcı kendi anahtarını girer.

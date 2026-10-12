@@ -3,6 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self' https://generativelanguage.googleapis.com https://api.groq.com https://api.anthropic.com; frame-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
 <meta name="theme-color" content="#1d4ed8">
 <meta name="description" content="Tamir Asistanı — telefon sürümü (tepe kamerası)">
 <title>Tamir Asistanı</title>
@@ -43,6 +45,7 @@ header h1{font-size:16px;margin:0;flex:1;min-width:0;overflow:hidden;text-overfl
 #zoomKutu{position:absolute;bottom:6px;left:8px;right:8px;display:flex;gap:8px;align-items:center;color:#fff;font-size:13px}
 #zoomKutu[hidden]{display:none}
 #zoomKutu input{flex:1;min-height:auto;padding:0;background:transparent;border:0}
+.kamDugme button.rol.aktif{background:rgba(29,78,216,.9);border-color:#93c5fd}
 #netlik{position:absolute;top:56px;left:8px;font-size:12px;color:#fff;background:rgba(0,0,0,.5);padding:1px 6px;border-radius:6px}
 #mesajlar{flex:1;overscroll-behavior:contain;min-height:0;overflow:auto;padding:10px;display:flex;flex-direction:column;gap:8px}
 .m{max-width:92%;padding:8px 11px;border-radius:12px;white-space:pre-wrap;word-wrap:break-word;font-size:15px}
@@ -77,6 +80,7 @@ header h1{font-size:16px;margin:0;flex:1;min-width:0;overflow:hidden;text-overfl
 .kutu label.tik{display:flex;gap:8px;align-items:flex-start;font-size:15px}
 .kutu label.tik input{width:22px;min-height:22px;flex:none;margin-top:1px}
 .dugmeler{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.dugmeler button{white-space:normal;max-width:100%;text-align:center}
 .iki{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .kl{display:flex;flex-direction:column;gap:8px}
 .kl .satir{display:flex;flex-direction:column;gap:4px;border-bottom:1px solid var(--kenar);padding-bottom:6px}
@@ -88,12 +92,32 @@ header h1{font-size:16px;margin:0;flex:1;min-width:0;overflow:hidden;text-overfl
 .cubuk{height:7px;border-radius:4px;background:var(--kenar);margin:3px 0}.cubuk div{height:100%;border-radius:4px;background:var(--vurgu)}
 .oge{border:1px solid var(--kenar);border-radius:10px;padding:8px 10px;margin-bottom:6px}
 .oge b{display:block}.oge small{color:var(--soluk)}
-.parca{display:grid;grid-template-columns:1fr 1fr 44px;gap:6px}
+.parca{display:grid;grid-template-columns:1fr 1.4fr 44px;gap:6px;border-bottom:1px solid var(--kenar);padding-bottom:6px;margin-bottom:6px}
+.parca .pLot{grid-column:1/3}.parca .tik{grid-column:3;font-size:12px}.parca .pSil{grid-column:3;grid-row:1}
+button.kucuk{min-height:32px;padding:2px 8px;font-size:13px}
+tr.red td{opacity:.55}
+.uyari{color:#fbbf24}tr.sapma td{background:rgba(239,68,68,.12)}
+ul.belgeler{margin:6px 0;padding-left:18px}ul.belgeler li{margin:4px 0;word-break:break-word}ul.belgeler a{color:#93c5fd}
+ol.adimlar{padding-left:20px}ol.adimlar li{margin:6px 0}
+img.onizleme{display:block;max-width:100%;max-height:220px;margin:0 auto 8px;border-radius:8px}
+iframe.oneriCerceve{width:100%;height:110px;border:0;border-radius:8px;background:#fff;margin-top:6px}
 table{width:100%;border-collapse:collapse;font-size:13px}td,th{padding:4px;border-bottom:1px solid var(--kenar);text-align:left;vertical-align:top}
 #menu{position:fixed;right:8px;top:52px;z-index:25;background:var(--panel);border:1px solid var(--kenar);border-radius:12px;padding:6px;display:flex;flex-direction:column;gap:4px;box-shadow:0 8px 24px rgba(0,0,0,.25)}
 #menu[hidden]{display:none}
 #menu button{text-align:left}
 .gizli,[hidden]{display:none!important}
+/* Bilgisayar / tablet (yatay geniş ekran): kamera solda büyük, sohbet ve kontroller sağda */
+@media (min-width:900px) and (min-aspect-ratio:4/3){
+  body{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(400px,1fr);grid-template-rows:auto auto minmax(0,1fr) auto}
+  header,#bildirim{grid-column:1/-1}
+  #kamAlan,#kamAlan.buyuk{grid-column:1;grid-row:3/5;height:auto;min-height:0}
+  #mesajlar{grid-column:2;grid-row:3;border-left:1px solid var(--kenar)}
+  #kontrol{grid-column:2;grid-row:4;border-left:1px solid var(--kenar)}
+  #buyutBtn{display:none}
+  .serit{flex-wrap:wrap;overflow-x:visible}
+  .modalArka{align-items:center}
+  .kutu{border-radius:16px}
+}
 </style>
 </head>
 <body>
@@ -111,6 +135,11 @@ table{width:100%;border-collapse:collapse;font-size:13px}td,th{padding:4px;borde
   <button data-m="faz">⇄ Faz değiştir</button>
   <button data-m="referans">⭐ Sağlam kart (referans) modu</button>
   <button data-m="ikinci">🧠 Bağımsız ikinci görüş</button>
+  <button data-m="kaynak">📚 Kaynaklar (datasheet / kılavuz)</button>
+  <button data-m="kisa">⚡ Kısa devre avı</button>
+  <button data-m="toplu">🔢 Toplu ölçüm</button>
+  <button data-m="ab">📊 A/B: arızalı ↔ sağlam</button>
+  <button data-m="cihazaDon" hidden>↩ Cihaz doğrulamasına dön</button>
   <button data-m="kapanis">🏁 Tamiri kapat / rapor</button>
   <button data-m="gecmis">🗂 Geçmiş tamirler</button>
   <button data-m="ayar">⚙ Ayarlar ve anahtarlar</button>
@@ -120,10 +149,15 @@ table{width:100%;border-collapse:collapse;font-size:13px}td,th{padding:4px;borde
   <video id="video" playsinline muted autoplay></video>
   <img id="donmus" alt="Gönderilen kare" hidden>
   <div id="kamYok"><div>Kamera kapalı</div><button class="ana" id="kamAcBtn">📷 Kamerayı aç</button></div>
-  <div class="kamDugme" id="kamSol"><button id="buyutBtn" aria-label="Görüntüyü büyüt">⤢</button></div>
+  <div class="kamDugme" id="kamSol">
+    <button id="rolTepe" class="rol" aria-label="Tepe kamera">📷 Tepe</button>
+    <button id="rolMikro" class="rol" aria-label="Mikroskop kamerası">🔬 Mikroskop</button>
+  </div>
   <div class="kamDugme" id="kamUst">
     <button id="fenerBtn" aria-label="Fener" hidden>🔦</button>
-    <button id="cevirBtn" aria-label="Ön / arka kamera">🔄</button>
+    <button id="cevirBtn" aria-label="Sıradaki kamera">🔄</button>
+    <button id="kamSecBtn" aria-label="Kamera seç">⚙</button>
+    <button id="buyutBtn" aria-label="Görüntüyü büyüt">⤢</button>
   </div>
   <span id="netlik" hidden></span>
   <div id="zoomKutu" hidden>🔍<input id="zoom" type="range" min="1" max="1" step="0.1" value="1" aria-label="Yakınlaştırma"><span id="zoomDeger">1×</span></div>
@@ -149,6 +183,6 @@ table{width:100%;border-collapse:collapse;font-size:13px}td,th{padding:4px;borde
 
 <div class="modalArka" id="modal" hidden><div class="kutu" id="modalKutu" role="dialog" aria-modal="true"></div></div>
 <input type="file" id="dosya" accept="image/*" capture="environment" hidden>
-<script src="app.js"></script>
+<script src="app.js?v=web-3.1"></script>
 </body>
 </html>
