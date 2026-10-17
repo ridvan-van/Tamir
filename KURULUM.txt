@@ -1,9 +1,38 @@
-TAMİR ASİSTANI — WEB SÜRÜMÜ 3.1 (telefon + bilgisayar)
+TAMİR ASİSTANI — WEB SÜRÜMÜ 4.0 (telefon + bilgisayar)
 =====================================================
 
 Aynı adres hem telefonda hem bilgisayarda çalışır (Chrome veya Edge).
 GitHub'a YÜKLENECEK DOSYALAR (8 adet): index.html, app.js, sw.js, manifest.webmanifest,
 ikon-192.png, ikon-512.png, KURULUM.txt, LICENSE. ("src" klasörü yalnızca kaynak koddur; yüklemeniz gerekmez.)
+
+4.0'DA YENİ (sohbet arayüzü)
+1) SOHBET MODU (varsayılan): Açılışta kamera KAPALIDIR; ekran sohbettir. Arızayı yazmanız yeterli.
+   ＋ düğmesi: 📷 Fotoğraf çek (telefonun kamerası açılır), 🖼 Galeriden seç, 🎬 Video tarama, 📄 Dosya (PDF kılavuz/şema).
+   Eklenen fotoğraf o anki adıma gider (kart taraması, ölçüm ekranı, cihaz ekranı); yazı da yazdıysanız soruya eklenir.
+   PDF ve videoyu yalnızca Gemini okur.
+2) 🎥 TEZGÂH MODU (başlıktaki 🎥 ya da ＋ menüsü): eski düzen — canlı kamera, 📷 Tepe / 🔬 Mikroskop, 🔄 kamera değiştirme,
+   ⚙ kamera seçimi, ⤢ büyütme, sesli "tamam". Seçim hatırlanır.
+3) TAMİR TÜRÜNÜ SOHBETTEN ANLAR: "Mindray T5 E-203 veriyor" yazınca "🩺 Cihaz arızası olarak başlayayım mı?" sorar;
+   tek dokunuşla (ya da sesle "evet") başlar. Marka/model, hata kodu ve belirti mesajdan alınır — mesajda GEÇMEYEN bilgi
+   alınmaz (uydurma engeli). Genel soruya ("ESR nedir?") tamir açmadan cevap verir. Kart fotoğrafı eklerseniz kart tamiri
+   önerir ve onaylayınca AYNI fotoğrafla taramaya başlar. Form hâlâ var: "✎ Formla gir" / Menü → Cihaz / kart bilgisi.
+4) YAPAY ZEKA SEÇİMİ (başlıktaki ✨ düğmesi): Otomatik (önerilen), Gemini 3.1 Pro, 3.8/3.7/3.6 Flash, 3.5 Flash-Lite, Groq.
+   Seçilen model sohbette, teşhiste ve cihaz analizinde ÖNCE denenir; yanıt vermezse sıradakine geçilir.
+   GÜVENLİK: ölçüm ekranı okuma, bağımsız ikinci görüş ve belge doğrulama seçimden ETKİLENMEZ (hep otomatik, iki farklı model).
+   Aynı pencerede KAYNAKLAR: 📚 datasheet/kılavuz araması ve 🇺🇸 FDA saha kayıtları aç/kapa.
+5) VİDEO TARAMA: Tezgâh modunda ⏺ (sağ alt) ya da ＋ → 🎬 Video. En fazla 30 sn; kamerayı yavaş gezdirin (saniyede ~1 cm),
+   her bölgede bir an durun. Program videodan en net ve birbirinden farklı (en fazla 8) kareyi kendisi seçer; video 12 MB'tan
+   küçükse videonun kendisi de Gemini'ye gider. Bulgular videodaki saniyesiyle verilir; küçük yazılar net karelerden okunur.
+   Ölçüm adımında video kullanılmaz (ölçü aleti ekranı fotoğrafla çekilir). Telefon kamerasıyla çekilen uzun/yüksek
+   çözünürlüklü video büyük olacağından yalnızca seçilen kareler gönderilir.
+
+3.2'DE YENİ
+- FDA SAHA KAYITLARI (openFDA, anahtar gerekmez): Cihaz arızası modunda marka/model girilince asistan, ABD FDA
+  veritabanından o modelin geri çağırmalarını, en sık bildirilen problemlerini ve son arıza bildirimlerini (MAUDE)
+  kendiliğinden getirir; hata kodu metninde geçen bildirimler öne alınır. Bunlar HAM, doğrulanmamış kayıtlardır:
+  yapay zekaya yalnızca "ipucu" olarak verilir, kesin bilgi sayılmaz. Menü → 🇺🇸 FDA saha kayıtları ile görüp
+  rapor bağlantılarını açabilirsiniz. FDA'ya yalnızca marka/model ve hata kodu gider; hasta verisi gitmez.
+  Anahtarsız sınır: günde 1000 sorgu (IP başına).
 
 3.1'DE YENİ
 1) OTOMATİK DATASHEET / SERVİS KILAVUZU

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self' https://generativelanguage.googleapis.com https://api.groq.com https://api.anthropic.com; frame-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self' https://generativelanguage.googleapis.com https://api.groq.com https://api.anthropic.com https://api.fda.gov; frame-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="no-referrer">
 <meta name="theme-color" content="#1d4ed8">
 <meta name="description" content="Tamir Asistanı — telefon sürümü (tepe kamerası)">
@@ -25,7 +25,8 @@ button.tehlike{border-color:var(--kotu);color:var(--kotu)}
 button.aktif{background:var(--asistan);border-color:var(--vurgu)}
 input,select,textarea{border:1px solid var(--kenar);background:var(--bg);border-radius:10px;padding:9px 10px;min-height:44px;width:100%}
 header{display:flex;align-items:center;gap:6px;padding:6px 8px;background:var(--panel);border-bottom:1px solid var(--kenar)}
-header h1{font-size:16px;margin:0;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+header h1{font-size:16px;margin:0;flex:1;min-width:64px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#fazRozet{max-width:26vw;overflow:hidden;text-overflow:ellipsis}
 .rozet{display:inline-block;padding:2px 9px;border-radius:99px;font-size:12px;font-weight:600;border:1px solid var(--vurgu);background:var(--asistan);white-space:nowrap}
 .rozet.ref{background:#fde68a;color:#78350f;border-color:#d97706}
 #bildirim{padding:8px 10px;font-weight:600;font-size:14px;display:flex;gap:8px;align-items:flex-start;background:var(--asistan)}
@@ -42,6 +43,8 @@ header h1{font-size:16px;margin:0;flex:1;min-width:0;overflow:hidden;text-overfl
 .kamDugme button{background:rgba(15,20,30,.65);color:#fff;border-color:rgba(255,255,255,.25);min-width:44px;padding:6px 10px}
 #kamUst{top:6px;right:6px}
 #kamSol{top:6px;left:6px}
+#kamAlt{bottom:44px;right:8px}
+#kamAlt button{min-width:52px;min-height:52px;border-radius:99px;font-size:20px}
 #zoomKutu{position:absolute;bottom:6px;left:8px;right:8px;display:flex;gap:8px;align-items:center;color:#fff;font-size:13px}
 #zoomKutu[hidden]{display:none}
 #zoomKutu input{flex:1;min-height:auto;padding:0;background:transparent;border:0}
@@ -105,6 +108,17 @@ table{width:100%;border-collapse:collapse;font-size:13px}td,th{padding:4px;borde
 #menu{position:fixed;right:8px;top:52px;z-index:25;background:var(--panel);border:1px solid var(--kenar);border-radius:12px;padding:6px;display:flex;flex-direction:column;gap:4px;box-shadow:0 8px 24px rgba(0,0,0,.25)}
 #menu[hidden]{display:none}
 #menu button{text-align:left}
+/* Sohbet modu: kamera alanı yok, sohbet tüm ekranı kullanır; tezgâh modu eski canlı kamera düzeni */
+body.sohbet #kamAlan{display:none}
+#modelBtn{font-size:12px;min-height:34px;padding:2px 10px;border-radius:99px;max-width:42vw;overflow:hidden;text-overflow:ellipsis}
+#tezgahBtn.aktif{background:var(--vurgu);border-color:var(--vurgu);color:#fff}
+#ekleBtn{font-size:22px;padding:0 12px}
+#kayitBtn.kayit{background:rgba(185,28,28,.9);border-color:#fca5a5}
+.ekMenu{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ekMenu button{min-height:64px;white-space:normal}
+.secenek{display:flex;flex-direction:column;gap:6px}
+.secenek button{text-align:left;white-space:normal}
+.secenek button small{display:block;color:var(--soluk);font-size:12px}
 .gizli,[hidden]{display:none!important}
 /* Bilgisayar / tablet (yatay geniş ekran): kamera solda büyük, sohbet ve kontroller sağda */
 @media (min-width:900px) and (min-aspect-ratio:4/3){
@@ -114,18 +128,22 @@ table{width:100%;border-collapse:collapse;font-size:13px}td,th{padding:4px;borde
   #mesajlar{grid-column:2;grid-row:3;border-left:1px solid var(--kenar)}
   #kontrol{grid-column:2;grid-row:4;border-left:1px solid var(--kenar)}
   #buyutBtn{display:none}
+  body.sohbet{grid-template-columns:minmax(0,1fr)}
+  body.sohbet #mesajlar,body.sohbet #kontrol{grid-column:1;border-left:0;width:100%;max-width:980px;justify-self:center}
   .serit{flex-wrap:wrap;overflow-x:visible}
   .modalArka{align-items:center}
   .kutu{border-radius:16px}
 }
 </style>
 </head>
-<body>
+<body class="sohbet">
 <header>
   <button id="menuBtn" aria-label="Menü">☰</button>
   <h1 id="baslik">Tamir Asistanı</h1>
   <span id="refRozet" class="rozet ref" hidden>REFERANS</span>
   <span id="fazRozet" class="rozet">Faz</span>
+  <button id="modelBtn" aria-label="Yapay zeka seçimi">✨ Otomatik</button>
+  <button id="tezgahBtn" aria-label="Tezgâh modu (canlı kamera)">🎥</button>
   <button id="hipBtn" aria-label="Hipotezler">🧩</button>
 </header>
 <div id="menu" hidden>
@@ -136,6 +154,7 @@ table{width:100%;border-collapse:collapse;font-size:13px}td,th{padding:4px;borde
   <button data-m="referans">⭐ Sağlam kart (referans) modu</button>
   <button data-m="ikinci">🧠 Bağımsız ikinci görüş</button>
   <button data-m="kaynak">📚 Kaynaklar (datasheet / kılavuz)</button>
+  <button data-m="fda">🇺🇸 FDA saha kayıtları</button>
   <button data-m="kisa">⚡ Kısa devre avı</button>
   <button data-m="toplu">🔢 Toplu ölçüm</button>
   <button data-m="ab">📊 A/B: arızalı ↔ sağlam</button>
@@ -159,6 +178,7 @@ table{width:100%;border-collapse:collapse;font-size:13px}td,th{padding:4px;borde
     <button id="kamSecBtn" aria-label="Kamera seç">⚙</button>
     <button id="buyutBtn" aria-label="Görüntüyü büyüt">⤢</button>
   </div>
+  <div class="kamDugme" id="kamAlt"><button id="kayitBtn" aria-label="Video tarama kaydı (en fazla 30 sn)">⏺</button></div>
   <span id="netlik" hidden></span>
   <div id="zoomKutu" hidden>🔍<input id="zoom" type="range" min="1" max="1" step="0.1" value="1" aria-label="Yakınlaştırma"><span id="zoomDeger">1×</span></div>
 </div>
@@ -167,7 +187,8 @@ table{width:100%;border-collapse:collapse;font-size:13px}td,th{padding:4px;borde
   <div id="adim">Hazırlanıyor…</div>
   <div class="serit" id="cipler"></div>
   <div class="giris">
-    <input id="metin" placeholder="Yazın: soru, değer (ör. 5,02 V) …" enterkeyhint="send" autocomplete="off">
+    <button id="ekleBtn" aria-label="Fotoğraf, video veya dosya ekle">＋</button>
+    <input id="metin" placeholder="Yazın: arıza, soru, değer (ör. 5,02 V) …" enterkeyhint="send" autocomplete="off">
     <button id="konusBtn" aria-label="Konuş">🎙</button>
     <button class="ana" id="gonderBtn">Gönder</button>
   </div>
@@ -183,6 +204,7 @@ table{width:100%;border-collapse:collapse;font-size:13px}td,th{padding:4px;borde
 
 <div class="modalArka" id="modal" hidden><div class="kutu" id="modalKutu" role="dialog" aria-modal="true"></div></div>
 <input type="file" id="dosya" accept="image/*" capture="environment" hidden>
-<script src="app.js?v=web-3.1"></script>
+<input type="file" id="dosyaEk" hidden>
+<script src="app.js?v=web-4.0"></script>
 </body>
 </html>
