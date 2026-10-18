@@ -1,300 +1,351 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="tr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gemini Performans ve Zaman Aşımı Testi</title>
-    <style>
-        body { font-family: sans-serif; margin: 15px; background: #f4f4f9; color: #333; }
-        input, select, button, textarea { width: 100%; padding: 8px; margin-top: 5px; margin-bottom: 12px; box-sizing: border-box; }
-        button { background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
-        button:hover { background: #0056b3; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; background: white; font-size: 12px; }
-        th, td { border: 1px solid #ddd; padding: 6px; text-align: left; }
-        th { background: #007bff; color: white; }
-        .log-box { background: #000; color: #0f0; padding: 10px; font-family: monospace; height: 120px; overflow-y: auto; font-size: 11px; border-radius: 4px; }
-        .card { background: white; padding: 15px; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 15px; }
-    </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Gemini Model Testi</title>
+<style>
+  :root { --bg:#f6f7f9; --kart:#fff; --yazi:#1d2330; --soluk:#6b7385; --cizgi:#dde1e8; --vurgu:#1a73e8; --iyi:#1e8e3e; --kotu:#d93025; --uyari:#e37400; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#14171c; --kart:#1d2128; --yazi:#e6e9ef; --soluk:#9aa3b5; --cizgi:#323844; --vurgu:#8ab4f8; --iyi:#81c995; --kotu:#f28b82; --uyari:#fdd663; } }
+  * { box-sizing:border-box; }
+  body { margin:0; padding:16px; background:var(--bg); color:var(--yazi); font:14px/1.5 system-ui,Segoe UI,Arial,sans-serif; }
+  h1 { font-size:20px; margin:0 0 12px; }
+  h2 { font-size:15px; margin:0 0 8px; }
+  .kart { background:var(--kart); border:1px solid var(--cizgi); border-radius:10px; padding:14px; margin-bottom:12px; }
+  .satir { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-bottom:8px; }
+  input[type=text], input[type=password], input[type=number], textarea { background:var(--bg); color:var(--yazi); border:1px solid var(--cizgi); border-radius:6px; padding:6px 8px; font:inherit; }
+  input[type=password], input[type=text] { flex:1; min-width:200px; }
+  input[type=number] { width:80px; }
+  textarea { width:100%; min-height:60px; resize:vertical; }
+  button { background:var(--vurgu); color:#fff; border:0; border-radius:6px; padding:7px 14px; font:inherit; cursor:pointer; }
+  button.ikincil { background:transparent; color:var(--vurgu); border:1px solid var(--vurgu); }
+  button:disabled { opacity:.5; cursor:default; }
+  label { display:inline-flex; align-items:center; gap:4px; margin-right:10px; cursor:pointer; }
+  .kutular { display:flex; flex-wrap:wrap; gap:4px 0; }
+  .not { color:var(--soluk); font-size:12px; }
+  .tablo-kap { overflow-x:auto; }
+  table { border-collapse:collapse; width:100%; font-size:13px; }
+  th, td { border-bottom:1px solid var(--cizgi); padding:5px 7px; text-align:left; white-space:nowrap; }
+  th { position:sticky; top:0; background:var(--kart); }
+  td.sayi { text-align:right; font-variant-numeric:tabular-nums; }
+  tr.tik { cursor:pointer; }
+  tr.tik:hover { background:var(--bg); }
+  .iyi { color:var(--iyi); font-weight:600; }
+  .kotu { color:var(--kotu); }
+  .uyari { color:var(--uyari); }
+  #cevap { white-space:pre-wrap; max-height:300px; overflow:auto; background:var(--bg); padding:10px; border-radius:6px; }
+  #durumYazi { font-weight:600; }
+</style>
 </head>
 <body>
+<h1>Gemini Model Hız Testi</h1>
 
-<div class="card">
-    <h2>Gemini API Test Paneli</h2>
-    <label>API Anahtarı (Bellekte kalır):</label>
-    <input type="password" id="apiKey" placeholder="AIzaSy...">
-
-    <label>Model:</label>
-    <select id="modelSelect">
-        <option value="gemini-3.1-pro">gemini-3.1-pro</option>
-        <option value="gemini-3.8-flash">gemini-3.8-flash</option>
-        <option value="gemini-3.7-flash">gemini-3.7-flash</option>
-        <option value="gemini-3.6-flash">gemini-3.6-flash</option>
-        <option value="gemini-3.5-flash-lite">gemini-3.5-flash-lite</option>
-    </select>
-    <input type="text" id="customModel" placeholder="Veya manuel model adı yazın...">
-
-    <label>Düşünme Seviyesi (Gemini 3 için):</label>
-    <select id="thinkingLevel">
-        <option value="">Seçilmedi (Varsayılan)</option>
-        <option value="MINIMAL">MINIMAL</option>
-        <option value="LOW">LOW</option>
-        <option value="MEDIUM">MEDIUM</option>
-        <option value="HIGH">HIGH</option>
-    </select>
-
-    <label>Akış (Streaming):</label>
-    <select id="streamMode">
-        <option value="false">Kapalı (Normal)</option>
-        <option value="true">Açık (SSE Stream)</option>
-    </select>
-
-    <label>Include Thoughts (Düşünce Özetleri):</label>
-    <select id="includeThoughts">
-        <option value="false">Kapalı</option>
-        <option value="true">Açık</option>
-    </select>
-
-    <label>Test Sorusu:</label>
-    <textarea id="promptText" rows="3">Bir hasta monitörü açılmıyor, adaptör 12 V veriyor, ön paneldeki güç LED'i yanmıyor. Olası nedenleri ve ilk 3 ölçümü JSON olarak ver: {"nedenler":[], "olcumler":[]}</textarea>
-
-    <button onclick="tekTestBaslat()">Tekli Testi Başlat</button>
-    <button onclick="topluTestBaslat()" style="background: #28a745;">Tümünü Sırayla Dene (Oto-Test)</button>
-    <button onclick="sonuclariKopyala()" style="background: #6c757d;">Sonuçları Kopyala</button>
+<div class="kart">
+  <h2>1. API anahtarı</h2>
+  <div class="satir">
+    <input type="password" id="anahtar" placeholder="AIza... ile başlayan anahtar">
+    <label><input type="checkbox" id="hatirla"> Bu bilgisayarda hatırla</label>
+    <button class="ikincil" id="modelGetir">Modelleri getir</button>
+  </div>
+  <div class="not">Anahtar yalnızca Google'a gönderilir. "Modelleri getir", anahtarınızın erişebildiği metin modellerini listeye ekler.</div>
 </div>
 
-<div class="card">
-    <h3>Canlı Düşünce ve Yanıt Günlüğü</h3>
-    <div id="logBox" class="log-box">Hazır...</div>
+<div class="kart">
+  <h2>2. Modeller</h2>
+  <div class="kutular" id="modelKutulari"></div>
+  <div class="satir" style="margin-top:8px">
+    <input type="text" id="ekModel" placeholder="Listede olmayan bir model adı ekle (ör. gemini-pro-latest)">
+    <button class="ikincil" id="modelEkle">Ekle</button>
+  </div>
 </div>
 
-<div class="card">
-    <h3>Ölçüm Tablosu</h3>
-    <div style="overflow-x:auto;">
-        <table id="resultTable">
-            <thead>
-                <tr>
-                    <th>Model</th>
-                    <th>Mod / Düşünme</th>
-                    <th>T1 (Başlık)</th>
-                    <th>T2 (İlk Düşünce)</th>
-                    <th>T3 (İlk Metin)</th>
-                    <th>T4 (Bitiş)</th>
-                    <th>Kod</th>
-                    <th>Thought Token</th>
-                    <th>Candidate Token</th>
-                    <th>Hata / Durum</th>
-                </tr>
-            </thead>
-            <tbody></tbody>
-        </table>
-    </div>
+<div class="kart">
+  <h2>3. Ayarlar</h2>
+  <div class="satir">
+    <b>Mod:</b>
+    <label><input type="checkbox" class="mod" value="Stream" checked> Stream</label>
+    <label><input type="checkbox" class="mod" value="Normal"> Normal</label>
+  </div>
+  <div class="satir">
+    <b>Düşünme:</b>
+    <label><input type="checkbox" class="seviye" value="varsayılan" checked> Varsayılan</label>
+    <label><input type="checkbox" class="seviye" value="LOW" checked> LOW</label>
+    <label><input type="checkbox" class="seviye" value="HIGH" checked> HIGH</label>
+  </div>
+  <div class="satir">
+    <label>Tekrar sayısı <input type="number" id="tekrar" value="1" min="1" max="10"></label>
+    <label>Testler arası bekleme (sn) <input type="number" id="bekleme" value="4" min="0" max="120"></label>
+    <label>Zaman aşımı (sn) <input type="number" id="zamanAsimi" value="120" min="10" max="600"></label>
+  </div>
+  <div class="satir">
+    <label><input type="checkbox" id="yenidenDene" checked> 429 / 503 hatasında bekleyip tekrar dene (en fazla 2 kez)</label>
+  </div>
+  <b>Test sorusu:</b>
+  <textarea id="soru">Bir hasta monitörünün güç kartında 12 V çıkışı yok, sigorta sağlam. Hangi sırayla neleri ölçmeliyim? Kısa ve maddeler hâlinde cevap ver.</textarea>
+</div>
+
+<div class="kart">
+  <div class="satir">
+    <button id="baslat">Testi başlat</button>
+    <button class="ikincil" id="durdur" disabled>Durdur</button>
+    <button class="ikincil" id="kopyala">Tabloyu kopyala</button>
+    <button class="ikincil" id="temizle">Temizle</button>
+    <span id="durumYazi"></span>
+  </div>
+  <div class="not">Süreler milisaniyedir. T1: sunucunun ilk yanıtı, T2: ilk düşünce, T3: ilk cevap metni, T4: bitiş. Bir satıra tıklayınca modelin cevabı aşağıda görünür.</div>
+</div>
+
+<div class="kart tablo-kap">
+  <table>
+    <thead><tr>
+      <th>Model</th><th>Mod / Düşünme</th><th>T1 (Başlık)</th><th>T2 (İlk Düşünce)</th><th>T3 (İlk Metin)</th><th>T4 (Bitiş)</th>
+      <th>Kod</th><th>Düşünce Token</th><th>Cevap Token</th><th>Bitiş Sebebi</th><th>Durum</th>
+    </tr></thead>
+    <tbody id="sonuclar"></tbody>
+  </table>
+</div>
+
+<div class="kart tablo-kap">
+  <h2>Model özeti (yalnızca başarılı testler)</h2>
+  <table>
+    <thead><tr><th>Model</th><th>Başarılı / Toplam</th><th>Ort. ilk metin (ms)</th><th>Ort. bitiş (ms)</th><th>En hızlı bitiş (ms)</th></tr></thead>
+    <tbody id="ozet"></tbody>
+  </table>
+</div>
+
+<div class="kart">
+  <h2>Seçili testin cevabı</h2>
+  <div id="cevap" class="not">Henüz seçilmedi.</div>
 </div>
 
 <script>
-function log(msg) {
-    const box = document.getElementById('logBox');
-    box.innerHTML += `[${new Date().toLocaleTimeString()}] ${msg}<br>`;
-    box.scrollTop = box.scrollHeight;
+const $ = id => document.getElementById(id);
+const VARSAYILAN = ["gemini-3.1-pro-preview", "gemini-3.8-flash", "gemini-3.7-flash", "gemini-3.6-flash", "gemini-3.5-flash-lite"];
+const sonuclar = [];
+let durdurIstendi = false;
+
+function kaydet(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+function sil(k) { try { localStorage.removeItem(k); } catch (e) {} }
+function oku(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+const bekle = ms => new Promise(r => setTimeout(r, ms));
+
+// ---------- Model kutuları ----------
+function modelKutusuEkle(ad, secili) {
+  ad = ad.replace(/^models\//, "").trim();
+  if (!ad || document.querySelector(`.model[value="${ad}"]`)) return;
+  const l = document.createElement("label");
+  l.innerHTML = `<input type="checkbox" class="model" value="${ad}" ${secili ? "checked" : ""}> ${ad}`;
+  $("modelKutulari").appendChild(l);
+}
+VARSAYILAN.forEach(m => modelKutusuEkle(m, true));
+
+$("modelEkle").onclick = () => { modelKutusuEkle($("ekModel").value, true); $("ekModel").value = ""; };
+
+$("modelGetir").onclick = async () => {
+  const key = $("anahtar").value.trim();
+  if (!key) return durum("Önce API anahtarını girin.", "kotu");
+  durum("Model listesi alınıyor...");
+  try {
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?pageSize=1000&key=${encodeURIComponent(key)}`);
+    const j = await res.json();
+    if (!res.ok) return durum(hataOzeti(res.status, JSON.stringify(j)), "kotu");
+    const adlar = (j.models || [])
+      .filter(m => (m.supportedGenerationMethods || []).includes("generateContent"))
+      .map(m => m.name.replace(/^models\//, ""))
+      .filter(a => /^gemini|^gemma/.test(a) && !/tts|image|banana|transcribe|lyria/.test(a));
+    adlar.forEach(a => modelKutusuEkle(a, false));
+    durum(`${adlar.length} metin modeli bulundu, listeye eklendi.`, "iyi");
+  } catch (e) { durum("Bağlantı hatası: " + e.message, "kotu"); }
+};
+
+// ---------- Anahtar ----------
+const kayitli = oku("gemini_anahtar");
+if (kayitli) { $("anahtar").value = kayitli; $("hatirla").checked = true; }
+function anahtariKaydet() {
+  if ($("hatirla").checked) kaydet("gemini_anahtar", $("anahtar").value.trim());
+  else sil("gemini_anahtar");
+}
+$("hatirla").onchange = anahtariKaydet;
+
+// ---------- Yardımcılar ----------
+function durum(yazi, sinif) { const s = $("durumYazi"); s.textContent = yazi; s.className = sinif || ""; }
+
+function hataOzeti(kod, govdeMetni) {
+  let mesaj = govdeMetni;
+  try { const j = JSON.parse(govdeMetni); mesaj = (j.error && j.error.message) || govdeMetni; } catch (e) {}
+  const ipucu = {
+    400: /API key/i.test(mesaj) ? "API anahtarı geçersiz" : "İstek hatalı (ayar desteklenmiyor olabilir)",
+    403: "Erişim izni yok",
+    404: "Model adı yanlış veya erişim yok",
+    429: "Kota doldu",
+    500: "Google sunucu hatası",
+    503: "Model yoğun"
+  }[kod] || "Hata";
+  return `HTTP ${kod} (${ipucu}): ${String(mesaj).slice(0, 140)}`;
 }
 
-function getModelName() {
-    const custom = document.getElementById('customModel').value.trim();
-    return custom ? custom : document.getElementById('modelSelect').value;
+function istekGovdesi(soru, seviye) {
+  const dusunme = { includeThoughts: true };
+  if (seviye !== "varsayılan") dusunme.thinkingLevel = seviye.toLowerCase();
+  return { contents: [{ role: "user", parts: [{ text: soru }] }], generationConfig: { thinkingConfig: dusunme } };
 }
 
-async function apiTestEt(model, thinkingLvl, isStream, incThoughts, prompt, tabloyaYaz = true) {
-    const apiKey = document.getElementById('apiKey').value.trim();
-    if (!apiKey) { alert("API Anahtarı gerekli!"); return null; }
+// ---------- Tek test ----------
+async function tekTest(key, model, mod, seviye, soru, zamanAsimiMs) {
+  const r = { model, mod: `${mod} / ${seviye}`, t1: "-", t2: "-", t3: "-", t4: "-", kod: "-", dus: 0, cevapTok: 0, bitis: "-", durum: "", metin: "" };
+  const t0 = performance.now();
+  const ms = () => Math.round(performance.now() - t0);
+  const yol = mod === "Stream" ? "streamGenerateContent?alt=sse&" : "generateContent?";
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:${yol}key=${encodeURIComponent(key)}`;
+  const kontrol = new AbortController();
+  const zamanlayici = setTimeout(() => kontrol.abort(), zamanAsimiMs);
 
-    const tStart = performance.now();
-    let t1 = "-", t2 = "-", t3 = "-", t4 = "-";
-    let httpCode = 0;
-    let thoughtTokens = 0, candidateTokens = 0;
-    let errorMsg = "Başarılı";
-
-    const endpoint = isStream 
-        ? `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:streamGenerateContent?alt=sse`
-        : `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`;
-
-    const payload = {
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: {
-            maxOutputTokens: 24576,
-            responseMimeType: "application/json"
-        }
-    };
-
-    if (thinkingLvl) {
-        payload.generationConfig.thinkingConfig = {
-            thinkingLevel: thinkingLvl,
-            includeThoughts: incThoughts === true
-        };
-    } else if (incThoughts === true) {
-        payload.generationConfig.thinkingConfig = { includeThoughts: true };
+  const isle = j => {
+    const aday = (j.candidates || [])[0] || {};
+    for (const p of (aday.content && aday.content.parts) || []) {
+      if (p.thought) { if (r.t2 === "-") r.t2 = ms(); }
+      else if (p.text) { if (r.t3 === "-") r.t3 = ms(); r.metin += p.text; }
     }
+    if (aday.finishReason) r.bitis = aday.finishReason;
+    if (j.promptFeedback && j.promptFeedback.blockReason) r.bitis = "ENGEL: " + j.promptFeedback.blockReason;
+    const u = j.usageMetadata;
+    if (u) { r.dus = u.thoughtsTokenCount || 0; r.cevapTok = u.candidatesTokenCount || 0; }
+  };
 
-    log(`İstek gönderiliyor: ${model} (Stream: ${isStream}, Think: ${thinkingLvl || 'yok'})`);
+  try {
+    const res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(istekGovdesi(soru, seviye)), signal: kontrol.signal });
+    r.t1 = ms(); r.kod = res.status;
+    if (!res.ok) { const t = await res.text(); r.t4 = ms(); r.durum = hataOzeti(res.status, t); return r; }
 
-    let response;
-    try {
-        response = await fetch(endpoint, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
-            body: JSON.stringify(payload)
-        });
-        httpCode = response.status;
-        t1 = Math.round(performance.now() - tStart);
-    } catch (err) {
-        t4 = Math.round(performance.now() - tStart);
-        errorMsg = "Ağ/Fetch Hatası: " + err.message;
-        if (tabloyaYaz) tabloyaEkle(model, (isStream ? 'Stream' : 'Normal') + ' / ' + (thinkingLvl || 'varsayılan'), t1, t2, t3, t4, 0, 0, 0, errorMsg);
-        return { error: errorMsg };
-    }
-
-    if (!response.ok && httpCode === 400 && thinkingLvl && thinkingLvl !== thinkingLvl.toLowerCase()) {
-        const yanit = await response.text();
-        if (/thinking/i.test(yanit)) {
-            log(`[${model}] ${thinkingLvl} kabul edilmedi, küçük harfle (${thinkingLvl.toLowerCase()}) yeniden deneniyor`);
-            return apiTestEt(model, thinkingLvl.toLowerCase(), isStream, incThoughts, prompt, tabloyaYaz);
-        }
-        errorMsg = `HTTP ${httpCode}: ${yanit.substring(0, 150)}`;
-        t4 = Math.round(performance.now() - tStart);
-        if (tabloyaYaz) tabloyaEkle(model, (isStream ? 'Stream' : 'Normal') + ' / ' + (thinkingLvl || 'varsayılan'), t1, t2, t3, t4, httpCode, 0, 0, errorMsg);
-        return { error: errorMsg };
-    }
-    if (!response.ok) {
-        const errText = await response.text();
-        t4 = Math.round(performance.now() - tStart);
-        errorMsg = `HTTP ${httpCode}: ${errText.substring(0, 150)}`;
-        log(errorMsg);
-        if (tabloyaYaz) tabloyaEkle(model, (isStream ? 'Stream' : 'Normal') + ' / ' + (thinkingLvl || 'varsayılan'), t1, t2, t3, t4, httpCode, 0, 0, errorMsg);
-        return { error: errorMsg };
-    }
-
-    if (isStream) {
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder();
-        let buffer = "", cevap = "";
-
-        try {
-            while (true) {
-                const { value, done } = await reader.read();
-                if (done) break;
-                buffer += decoder.decode(value, { stream: true });
-                const lines = buffer.split('\n');
-                buffer = lines.pop(); // Kalan parçayı sakla
-
-                for (const line of lines) {
-                    if (line.startsWith('data: ')) {
-                        const jsonStr = line.substring(6).trim();
-                        if (!jsonStr) continue;
-                        try {
-                            const data = JSON.parse(jsonStr);
-                            const now = Math.round(performance.now() - tStart);
-
-                            // Token sayımları
-                            if (data.usageMetadata) {
-                                thoughtTokens = data.usageMetadata.thoughtsTokenCount || 0;
-                                candidateTokens = data.usageMetadata.candidatesTokenCount || 0;
-                            }
-
-                            if (data.candidates && data.candidates[0]) {
-                                const cand = data.candidates[0];
-                                for (const part of (cand.content && cand.content.parts) || []) {
-                                    if (!part.text) continue;
-                                    if (part.thought) {
-                                        if (t2 === "-") { t2 = now; log(`[${model}] İlk düşünce parçası geldi (${t2} ms)`); }
-                                        log("💭 " + part.text.slice(0, 160).replace(/</g, "&lt;"));
-                                    } else {
-                                        if (t3 === "-") { t3 = now; log(`[${model}] İlk cevap metni geldi (${t3} ms)`); }
-                                        cevap += part.text;
-                                    }
-                                }
-                                if (cand.finishReason && cand.finishReason !== "STOP") errorMsg = "Bitiş nedeni: " + cand.finishReason;
-                            }
-                        } catch (e) {
-                            // JSON ayrıştırma hatası yoksayılabilir
-                        }
-                    }
-                }
-            }
-            t4 = Math.round(performance.now() - tStart);
-            if (cevap) log("✅ Cevap: " + cevap.slice(0, 300).replace(/</g, "&lt;"));
-            else if (errorMsg === "Başarılı") errorMsg = "Cevap metni gelmedi";
-        } catch (streamErr) {
-            t4 = Math.round(performance.now() - tStart);
-            errorMsg = "Stream Okuma Hatası: " + streamErr.message;
-        }
+    if (mod === "Stream") {
+      const okuyucu = res.body.getReader();
+      const coz = new TextDecoder();
+      let tampon = "";
+      const satirIsle = satir => {
+        satir = satir.trim();
+        if (!satir.startsWith("data:")) return;
+        const veri = satir.slice(5).trim();
+        if (veri) { try { isle(JSON.parse(veri)); } catch (e) {} }
+      };
+      while (true) {
+        const { done, value } = await okuyucu.read();
+        if (done) break;
+        tampon += coz.decode(value, { stream: true });
+        let i;
+        while ((i = tampon.indexOf("\n")) >= 0) { satirIsle(tampon.slice(0, i)); tampon = tampon.slice(i + 1); }
+      }
+      satirIsle(tampon);
     } else {
-        try {
-            const data = await response.json();
-            t4 = Math.round(performance.now() - tStart);
-            if (data.usageMetadata) {
-                thoughtTokens = data.usageMetadata.thoughtsTokenCount || 0;
-                candidateTokens = data.usageMetadata.candidatesTokenCount || 0;
-            }
-            const parcalar = (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts) || [];
-            const metin = parcalar.filter(x => !x.thought && x.text).map(x => x.text).join("");
-            if (metin) { t3 = t4; log("✅ Cevap: " + metin.slice(0, 300).replace(/</g, "&lt;")); }   // normal istekte hepsi en sonda gelir
-            else errorMsg = "Cevap metni gelmedi" + (data.candidates && data.candidates[0] && data.candidates[0].finishReason ? " (" + data.candidates[0].finishReason + ")" : "");
-        } catch (jsonErr) {
-            t4 = Math.round(performance.now() - tStart);
-            errorMsg = "JSON Çözümleme Hatası: " + jsonErr.message;
-        }
+      isle(await res.json());
     }
-
-    log(`[${model}] Tamamlandı. T1:${t1}ms, T4:${t4}ms`);
-    if (tabloyaYaz) tabloyaEkle(model, (isStream ? 'Stream' : 'Normal') + ' / ' + (thinkingLvl || 'varsayılan'), t1, t2, t3, t4, httpCode, thoughtTokens, candidateTokens, errorMsg);
-    return { t1, t4, error: errorMsg };
+    r.t4 = ms();
+    r.durum = r.metin.trim() ? "Başarılı" : "Cevap metni gelmedi";
+  } catch (e) {
+    r.t4 = ms();
+    r.durum = e.name === "AbortError" ? "Zaman aşımı" : "Bağlantı hatası: " + e.message;
+  } finally {
+    clearTimeout(zamanlayici);
+  }
+  return r;
 }
 
-async function tekTestBaslat() {
-    const model = getModelName();
-    const thinkingLvl = document.getElementById('thinkingLevel').value;
-    const isStream = document.getElementById('streamMode').value === 'true';
-    const incThoughts = document.getElementById('includeThoughts').value === 'true';
-    const prompt = document.getElementById('promptText').value;
-
-    await apiTestEt(model, thinkingLvl, isStream, incThoughts, prompt, true);
+// ---------- Tablo ----------
+function sinifBul(r) {
+  if (r.durum === "Başarılı") return "iyi";
+  if (r.kod === 429 || r.kod === 503 || r.durum.startsWith("Cevap")) return "uyari";
+  return "kotu";
 }
 
-async function topluTestBaslat() {
-    const modeller = ["gemini-3.1-pro", "gemini-3.8-flash", "gemini-3.7-flash", "gemini-3.6-flash", "gemini-3.5-flash-lite"];
-    const seviyeler = ["", "LOW", "HIGH"];
-    const prompt = document.getElementById('promptText').value;
+function satirEkle(r) {
+  const tr = document.createElement("tr");
+  tr.className = "tik";
+  const hucre = (v, sayi) => `<td${sayi ? ' class="sayi"' : ""}>${v}</td>`;
+  const kacis = s => String(s).replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+  tr.innerHTML = hucre(r.model) + hucre(r.mod) + hucre(r.t1, 1) + hucre(r.t2, 1) + hucre(r.t3, 1) + hucre(r.t4, 1) +
+    hucre(r.kod, 1) + hucre(r.dus, 1) + hucre(r.cevapTok, 1) + hucre(r.bitis) +
+    `<td class="${sinifBul(r)}">${kacis(r.durum)}</td>`;
+  tr.onclick = () => {
+    $("cevap").className = "";
+    $("cevap").textContent = r.metin || "(Cevap metni yok)";
+  };
+  $("sonuclar").appendChild(tr);
+}
 
-    log("Toplu test başlatıldı...");
-    for (const model of modeller) {
-        for (const sev of seviyeler) {
-            log(`Sıradaki kombinasyon -> Model: ${model}, Düşünme: ${sev || 'yok'}`);
-            await apiTestEt(model, sev, true, true, prompt, true);
-            // Kotaya takılmamak için 3 saniye bekleme
-            await new Promise(r => setTimeout(r, 3000));
-        }
+function ozetGuncelle() {
+  const gruplar = {};
+  for (const r of sonuclar) (gruplar[r.model] = gruplar[r.model] || []).push(r);
+  const ort = a => a.length ? Math.round(a.reduce((x, y) => x + y, 0) / a.length) : "-";
+  $("ozet").innerHTML = Object.entries(gruplar).map(([model, liste]) => {
+    const iyi = liste.filter(r => r.durum === "Başarılı");
+    const ilkMetin = iyi.map(r => r.t3).filter(v => typeof v === "number");
+    const bitis = iyi.map(r => r.t4);
+    return `<tr><td>${model}</td><td class="sayi">${iyi.length} / ${liste.length}</td><td class="sayi">${ort(ilkMetin)}</td><td class="sayi">${ort(bitis)}</td><td class="sayi">${bitis.length ? Math.min(...bitis) : "-"}</td></tr>`;
+  }).join("");
+}
+
+// ---------- Ana döngü ----------
+$("baslat").onclick = async () => {
+  const key = $("anahtar").value.trim();
+  if (!key) return durum("Önce API anahtarını girin.", "kotu");
+  anahtariKaydet();
+  const modeller = [...document.querySelectorAll(".model:checked")].map(x => x.value);
+  const modlar = [...document.querySelectorAll(".mod:checked")].map(x => x.value);
+  const seviyeler = [...document.querySelectorAll(".seviye:checked")].map(x => x.value);
+  if (!modeller.length || !modlar.length || !seviyeler.length) return durum("En az bir model, bir mod ve bir düşünme seviyesi seçin.", "kotu");
+
+  const soru = $("soru").value.trim() || "Merhaba";
+  const tekrar = Math.max(1, +$("tekrar").value || 1);
+  const beklemeMs = Math.max(0, +$("bekleme").value || 0) * 1000;
+  const zamanAsimiMs = Math.max(10, +$("zamanAsimi").value || 120) * 1000;
+  const yenidenDene = $("yenidenDene").checked;
+
+  const isler = [];
+  for (let t = 0; t < tekrar; t++) for (const m of modeller) for (const mod of modlar) for (const s of seviyeler) isler.push([m, mod, s]);
+
+  durdurIstendi = false;
+  $("baslat").disabled = true; $("durdur").disabled = false;
+
+  for (let i = 0; i < isler.length; i++) {
+    if (durdurIstendi) break;
+    const [m, mod, s] = isler[i];
+    let r, deneme = 0;
+    while (true) {
+      deneme++;
+      durum(`${i + 1} / ${isler.length}: ${m} (${mod} / ${s})${deneme > 1 ? ` — ${deneme}. deneme` : ""}`);
+      r = await tekTest(key, m, mod, s, soru, zamanAsimiMs);
+      const gecici = r.kod === 429 || r.kod === 503;
+      if (!yenidenDene || !gecici || deneme >= 3 || durdurIstendi) break;
+      durum(`${m}: HTTP ${r.kod}, 10 sn sonra tekrar denenecek...`, "uyari");
+      await bekle(10000);
     }
-    log("Toplu test tamamlandı!");
-}
+    if (deneme > 1) r.durum += ` (${deneme}. deneme)`;
+    sonuclar.push(r);
+    satirEkle(r);
+    ozetGuncelle();
+    if (i < isler.length - 1 && !durdurIstendi) await bekle(beklemeMs);
+  }
 
-function tabloyaEkle(model, mode, t1, t2, t3, t4, code, thoughtTok, candTok, err) {
-    const tbody = document.getElementById('resultTable').querySelector('tbody');
-    const row = tbody.insertRow(-1);
-    for (const v of [model, mode, t1, t2, t3, t4, code, thoughtTok, candTok, err]) row.insertCell().textContent = v;
-}
+  $("baslat").disabled = false; $("durdur").disabled = true;
+  durum(durdurIstendi ? "Test durduruldu." : "Test bitti.", durdurIstendi ? "uyari" : "iyi");
+};
 
-function sonuclariKopyala() {
-    let text = "";
-    const rows = document.querySelectorAll('#resultTable tr');
-    rows.forEach(row => {
-        const cols = row.querySelectorAll('th, td');
-        let data = [];
-        cols.forEach(col => data.push(col.innerText));
-        text += data.join("\t") + "\n";
-    });
-    navigator.clipboard.writeText(text).then(() => {
-        alert("Tablo panoya kopyalandı!");
-    });
-}
+$("durdur").onclick = () => { durdurIstendi = true; durum("Mevcut test bitince durdurulacak...", "uyari"); };
+
+$("temizle").onclick = () => {
+  sonuclar.length = 0; $("sonuclar").innerHTML = ""; $("ozet").innerHTML = "";
+  $("cevap").className = "not"; $("cevap").textContent = "Henüz seçilmedi."; durum("");
+};
+
+$("kopyala").onclick = async () => {
+  const baslik = ["Model", "Mod / Düşünme", "T1 (Başlık)", "T2 (İlk Düşünce)", "T3 (İlk Metin)", "T4 (Bitiş)", "Kod", "Düşünce Token", "Cevap Token", "Bitiş Sebebi", "Durum"];
+  const satirlar = sonuclar.map(r => [r.model, r.mod, r.t1, r.t2, r.t3, r.t4, r.kod, r.dus, r.cevapTok, r.bitis, r.durum].join("\t"));
+  const metin = [baslik.join("\t"), ...satirlar].join("\n");
+  try { await navigator.clipboard.writeText(metin); durum("Tablo panoya kopyalandı.", "iyi"); }
+  catch (e) {
+    const t = document.createElement("textarea"); t.value = metin; document.body.appendChild(t); t.select();
+    document.execCommand("copy"); t.remove(); durum("Tablo panoya kopyalandı.", "iyi");
+  }
+};
 </script>
-
 </body>
 </html>
