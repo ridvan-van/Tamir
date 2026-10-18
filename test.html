@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gemini Performans ve Zaman Aşımı Testi</title>
+    <style>
+        body { font-family: sans-serif; margin: 15px; background: #f4f4f9; color: #333; }
+        input, select, button, textarea { width: 100%; padding: 8px; margin-top: 5px; margin-bottom: 12px; box-sizing: border-box; }
+        button { background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        button:hover { background: #0056b3; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; background: white; font-size: 12px; }
+        th, td { border: 1px solid #ddd; padding: 6px; text-align: left; }
+        th { background: #007bff; color: white; }
+        .log-box { background: #000; color: #0f0; padding: 10px; font-family: monospace; height: 120px; overflow-y: auto; font-size: 11px; border-radius: 4px; }
+        .card { background: white; padding: 15px; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 15px; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>Gemini API Test Paneli</h2>
+    <label>API Anahtarı (Bellekte kalır):</label>
+    <input type="password" id="apiKey" placeholder="AIzaSy...">
+
+    <label>Model:</label>
+    <select id="modelSelect">
+        <option value="gemini-3.1-pro">gemini-3.1-pro</option>
+        <option value="gemini-3.8-flash">gemini-3.8-flash</option>
+        <option value="gemini-3.7-flash">gemini-3.7-flash</option>
+        <option value="gemini-3.6-flash">gemini-3.6-flash</option>
+        <option value="gemini-3.5-flash-lite">gemini-3.5-flash-lite</option>
+    </select>
+    <input type="text" id="customModel" placeholder="Veya manuel model adı yazın...">
+
+    <label>Düşünme Seviyesi (Gemini 3 için):</label>
+    <select id="thinkingLevel">
+        <option value="">Seçilmedi (Varsayılan)</option>
+        <option value="MINIMAL">MINIMAL</option>
+        <option value="LOW">LOW</option>
+        <option value="MEDIUM">MEDIUM</option>
+        <option value="HIGH">HIGH</option>
+    </select>
+
+    <label>Akış (Streaming):</label>
+    <select id="streamMode">
+        <option value="false">Kapalı (Normal)</option>
+        <option value="true">Açık (SSE Stream)</option>
+    </select>
+
+    <label>Include Thoughts (Düşünce Özetleri):</label>
+    <select id="includeThoughts">
+        <option value="false">Kapalı</option>
+        <option value="true">Açık</option>
+    </select>
+
+    <label>Test Sorusu:</label>
+    <textarea id="promptText" rows="3">Bir hasta monitörü açılmıyor, adaptör 12 V veriyor, ön paneldeki güç LED'i yanmıyor. Olası nedenleri ve ilk 3 ölçümü JSON olarak ver: {"nedenler":[], "olcumler":[]}</textarea>
+
+    <button onclick="tekTestBaslat()">Tekli Testi Başlat</button>
+    <button onclick="topluTestBaslat()" style="background: #28a745;">Tümünü Sırayla Dene (Oto-Test)</button>
+    <button onclick="sonuclariKopyala()" style="background: #6c757d;">Sonuçları Kopyala</button>
+</div>
+
+<div class="card">
+    <h3>Canlı Düşünce ve Yanıt Günlüğü</h3>
+    <div id="logBox" class="log-box">Hazır...</div>
+</div>
+
+<div class="card">
+    <h3>Ölçüm Tablosu</h3>
+    <div style="overflow-x:auto;">
+        <table id="resultTable">
+            <thead>
+                <tr>
+                    <th>Model</th>
+                    <th>Mod / Düşünme</th>
+                    <th>T1 (Başlık)</th>
+                    <th>T2 (İlk Düşünce)</th>
+                    <th>T3 (İlk Metin)</th>
+                    <th>T4 (Bitiş)</th>
+                    <th>Kod</th>
+                    <th>Thought Token</th>
+                    <th>Candidate Token</th>
+                    <th>Hata / Durum</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+function log(msg) {
+    const box = document.getElementById('logBox');
+    box.innerHTML += `[${new Date().toLocaleTimeString()}] ${msg}<br>`;
+    box.scrollTop = box.scrollHeight;
+}
+
+function getModelName() {
+    const custom = document.getElementById('customModel').value.trim();
+    return custom ? custom : document.getElementById('modelSelect').value;
+}
+
+async function apiTestEt(model, thinkingLvl, isStream, incThoughts, prompt, tabloyaYaz = true) {
+    const apiKey = document.getElementById('apiKey').value.trim();
+    if (!apiKey) { alert("API Anahtarı gerekli!"); return null; }
+
+    const tStart = performance.now();
+    let t1 = "-", t2 = "-", t3 = "-", t4 = "-";
+    let httpCode = 0;
+    let thoughtTokens = 0, candidateTokens = 0;
+    let errorMsg = "Başarılı";
+
+    const endpoint = isStream 
+        ? `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:streamGenerateContent?alt=sse`
+        : `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`;
+
+    const payload = {
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: {
+            maxOutputTokens: 24576,
+            responseMimeType: "application/json"
+        }
+    };
+
+    if (thinkingLvl) {
+        payload.generationConfig.thinkingConfig = {
+            thinkingLevel: thinkingLvl,
+            includeThoughts: incThoughts === true
+        };
+    } else if (incThoughts === true) {
+        payload.generationConfig.thinkingConfig = { includeThoughts: true };
+    }
+
+    log(`İstek gönderiliyor: ${model} (Stream: ${isStream}, Think: ${thinkingLvl || 'yok'})`);
+
+    let response;
+    try {
+        response = await fetch(endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
+            body: JSON.stringify(payload)
+        });
+        httpCode = response.status;
+        t1 = Math.round(performance.now() - tStart);
+    } catch (err) {
+        t4 = Math.round(performance.now() - tStart);
+        errorMsg = "Ağ/Fetch Hatası: " + err.message;
+        if (tabloyaYaz) tabloyaEkle(model, (isStream ? 'Stream' : 'Normal') + ' / ' + (thinkingLvl || 'varsayılan'), t1, t2, t3, t4, 0, 0, 0, errorMsg);
+        return { error: errorMsg };
+    }
+
+    if (!response.ok && httpCode === 400 && thinkingLvl && thinkingLvl !== thinkingLvl.toLowerCase()) {
+        const yanit = await response.text();
+        if (/thinking/i.test(yanit)) {
+            log(`[${model}] ${thinkingLvl} kabul edilmedi, küçük harfle (${thinkingLvl.toLowerCase()}) yeniden deneniyor`);
+            return apiTestEt(model, thinkingLvl.toLowerCase(), isStream, incThoughts, prompt, tabloyaYaz);
+        }
+        errorMsg = `HTTP ${httpCode}: ${yanit.substring(0, 150)}`;
+        t4 = Math.round(performance.now() - tStart);
+        if (tabloyaYaz) tabloyaEkle(model, (isStream ? 'Stream' : 'Normal') + ' / ' + (thinkingLvl || 'varsayılan'), t1, t2, t3, t4, httpCode, 0, 0, errorMsg);
+        return { error: errorMsg };
+    }
+    if (!response.ok) {
+        const errText = await response.text();
+        t4 = Math.round(performance.now() - tStart);
+        errorMsg = `HTTP ${httpCode}: ${errText.substring(0, 150)}`;
+        log(errorMsg);
+        if (tabloyaYaz) tabloyaEkle(model, (isStream ? 'Stream' : 'Normal') + ' / ' + (thinkingLvl || 'varsayılan'), t1, t2, t3, t4, httpCode, 0, 0, errorMsg);
+        return { error: errorMsg };
+    }
+
+    if (isStream) {
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = "", cevap = "";
+
+        try {
+            while (true) {
+                const { value, done } = await reader.read();
+                if (done) break;
+                buffer += decoder.decode(value, { stream: true });
+                const lines = buffer.split('\n');
+                buffer = lines.pop(); // Kalan parçayı sakla
+
+                for (const line of lines) {
+                    if (line.startsWith('data: ')) {
+                        const jsonStr = line.substring(6).trim();
+                        if (!jsonStr) continue;
+                        try {
+                            const data = JSON.parse(jsonStr);
+                            const now = Math.round(performance.now() - tStart);
+
+                            // Token sayımları
+                            if (data.usageMetadata) {
+                                thoughtTokens = data.usageMetadata.thoughtsTokenCount || 0;
+                                candidateTokens = data.usageMetadata.candidatesTokenCount || 0;
+                            }
+
+                            if (data.candidates && data.candidates[0]) {
+                                const cand = data.candidates[0];
+                                for (const part of (cand.content && cand.content.parts) || []) {
+                                    if (!part.text) continue;
+                                    if (part.thought) {
+                                        if (t2 === "-") { t2 = now; log(`[${model}] İlk düşünce parçası geldi (${t2} ms)`); }
+                                        log("💭 " + part.text.slice(0, 160).replace(/</g, "&lt;"));
+                                    } else {
+                                        if (t3 === "-") { t3 = now; log(`[${model}] İlk cevap metni geldi (${t3} ms)`); }
+                                        cevap += part.text;
+                                    }
+                                }
+                                if (cand.finishReason && cand.finishReason !== "STOP") errorMsg = "Bitiş nedeni: " + cand.finishReason;
+                            }
+                        } catch (e) {
+                            // JSON ayrıştırma hatası yoksayılabilir
+                        }
+                    }
+                }
+            }
+            t4 = Math.round(performance.now() - tStart);
+            if (cevap) log("✅ Cevap: " + cevap.slice(0, 300).replace(/</g, "&lt;"));
+            else if (errorMsg === "Başarılı") errorMsg = "Cevap metni gelmedi";
+        } catch (streamErr) {
+            t4 = Math.round(performance.now() - tStart);
+            errorMsg = "Stream Okuma Hatası: " + streamErr.message;
+        }
+    } else {
+        try {
+            const data = await response.json();
+            t4 = Math.round(performance.now() - tStart);
+            if (data.usageMetadata) {
+                thoughtTokens = data.usageMetadata.thoughtsTokenCount || 0;
+                candidateTokens = data.usageMetadata.candidatesTokenCount || 0;
+            }
+            const parcalar = (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts) || [];
+            const metin = parcalar.filter(x => !x.thought && x.text).map(x => x.text).join("");
+            if (metin) { t3 = t4; log("✅ Cevap: " + metin.slice(0, 300).replace(/</g, "&lt;")); }   // normal istekte hepsi en sonda gelir
+            else errorMsg = "Cevap metni gelmedi" + (data.candidates && data.candidates[0] && data.candidates[0].finishReason ? " (" + data.candidates[0].finishReason + ")" : "");
+        } catch (jsonErr) {
+            t4 = Math.round(performance.now() - tStart);
+            errorMsg = "JSON Çözümleme Hatası: " + jsonErr.message;
+        }
+    }
+
+    log(`[${model}] Tamamlandı. T1:${t1}ms, T4:${t4}ms`);
+    if (tabloyaYaz) tabloyaEkle(model, (isStream ? 'Stream' : 'Normal') + ' / ' + (thinkingLvl || 'varsayılan'), t1, t2, t3, t4, httpCode, thoughtTokens, candidateTokens, errorMsg);
+    return { t1, t4, error: errorMsg };
+}
+
+async function tekTestBaslat() {
+    const model = getModelName();
+    const thinkingLvl = document.getElementById('thinkingLevel').value;
+    const isStream = document.getElementById('streamMode').value === 'true';
+    const incThoughts = document.getElementById('includeThoughts').value === 'true';
+    const prompt = document.getElementById('promptText').value;
+
+    await apiTestEt(model, thinkingLvl, isStream, incThoughts, prompt, true);
+}
+
+async function topluTestBaslat() {
+    const modeller = ["gemini-3.1-pro", "gemini-3.8-flash", "gemini-3.7-flash", "gemini-3.6-flash", "gemini-3.5-flash-lite"];
+    const seviyeler = ["", "LOW", "HIGH"];
+    const prompt = document.getElementById('promptText').value;
+
+    log("Toplu test başlatıldı...");
+    for (const model of modeller) {
+        for (const sev of seviyeler) {
+            log(`Sıradaki kombinasyon -> Model: ${model}, Düşünme: ${sev || 'yok'}`);
+            await apiTestEt(model, sev, true, true, prompt, true);
+            // Kotaya takılmamak için 3 saniye bekleme
+            await new Promise(r => setTimeout(r, 3000));
+        }
+    }
+    log("Toplu test tamamlandı!");
+}
+
+function tabloyaEkle(model, mode, t1, t2, t3, t4, code, thoughtTok, candTok, err) {
+    const tbody = document.getElementById('resultTable').querySelector('tbody');
+    const row = tbody.insertRow(-1);
+    for (const v of [model, mode, t1, t2, t3, t4, code, thoughtTok, candTok, err]) row.insertCell().textContent = v;
+}
+
+function sonuclariKopyala() {
+    let text = "";
+    const rows = document.querySelectorAll('#resultTable tr');
+    rows.forEach(row => {
+        const cols = row.querySelectorAll('th, td');
+        let data = [];
+        cols.forEach(col => data.push(col.innerText));
+        text += data.join("\t") + "\n";
+    });
+    navigator.clipboard.writeText(text).then(() => {
+        alert("Tablo panoya kopyalandı!");
+    });
+}
+</script>
+
+</body>
+</html>
