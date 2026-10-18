@@ -1,9 +1,15 @@
-TAMİR ASİSTANI — WEB SÜRÜMÜ 4.6 (telefon + bilgisayar)
+TAMİR ASİSTANI — WEB SÜRÜMÜ 4.7 (telefon + bilgisayar)
 =====================================================
 
 Aynı adres hem telefonda hem bilgisayarda çalışır (Chrome veya Edge).
 GitHub'a YÜKLENECEK DOSYALAR (8 adet): index.html, app.js, sw.js, manifest.webmanifest,
 ikon-192.png, ikon-512.png, KURULUM.txt, LICENSE. ("src" klasörü yalnızca kaynak koddur; yüklemeniz gerekmez.)
+
+4.7'DE YENİ
+- FDA kayıtlarının Türkçe çevirisi Groq anahtarı varsa önce Groq'a (gpt-oss-120b) yaptırılır; Gemini'nin günlük
+  ~20 istek hakkı teşhise kalır. Groq yanıt vermezse eskisi gibi Gemini çevirir. Google Cloud anahtarı GEREKMEZ.
+  (Google Cloud deneme kredisiyle Vertex AI denendi: Google, tarayıcıdan çalışan uygulamalara bu servis için
+  API anahtarı vermiyor; sunucu gerektirdiği için vazgeçildi.)
 
 4.6'DA YENİ (gerçek modellerle canlı test sonrası)
 - MUHAKEME KURALLARI: parça sökme/devre dışı bırakma önerisinden önce uyumluluk kontrolü (ör. işlemcinin dahili grafiği),

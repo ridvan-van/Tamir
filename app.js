@@ -5,7 +5,7 @@
  * Telif Hakkı (c) 2026 Rıdvan Zorer. Tüm hakları saklıdır.
  */
 "use strict";
-const SURUM = "web-4.6";
+const SURUM = "web-4.7";
 const $ = (s, k = document) => k.querySelector(s);
 const $$ = (s, k = document) => [...k.querySelectorAll(s)];
 const _metinGuvenli = s => { try { return String(s ?? ""); } catch { return ""; } };     // {toString: …} gibi bozuk değer çökertmesin
@@ -2802,10 +2802,21 @@ async function fdaCevir(f) {
   const metinler = [...new Set([...f.sorunlar.map(x => x.term), ...f.geri.flatMap(g => [g.urun, g.sebep, g.kok]), ...f.olaylar.flatMap(o => [o.sorun, o.metin.slice(0, 250)])]
     .map(_str).filter(t => t && /[a-z]{3}/i.test(t) && !Object.hasOwn(_fdaTr, t)))].slice(0, 60);
   if (!metinler.length) return true;
-  const r = await aiSor({sistem: SISTEM_CEVIRI, istem: JSON.stringify(metinler), tur: "hizli", durumMetni: "FDA kayıtları Türkçeye çevriliyor…",
-    dogrula: j => Array.isArray(j?.ceviri) && j.ceviri.length === metinler.length && j.ceviri.every(x => typeof x === "string" && x.trim()) ? j.ceviri : null});
-  if (!r) return false;
-  metinler.forEach((t, i) => { _fdaTr[t] = r.veri[i].trim().slice(0, 600); });
+  const dogrula = j => Array.isArray(j?.ceviri) && j.ceviri.length === metinler.length && j.ceviri.every(x => typeof x === "string" && x.trim()) ? j.ceviri : null;
+  // Çeviri basit bir iş: Groq anahtarı varsa önce ona sor, Gemini'nin günlük 20 hakkı teşhise kalsın
+  let ceviri = null;
+  if (AYAR.groq) {
+    mesgul(true, "FDA kayıtları Türkçeye çevriliyor (Groq)…");
+    try { ceviri = dogrula(jsonAyikla(await groqCagir("openai/gpt-oss-120b", SISTEM_CEVIRI, JSON.stringify(metinler), [], AbortSignal.timeout(30000)))); }
+    catch (e) { console.warn("Groq çeviri olmadı, Gemini'ye geçiliyor:", e && e.message); }
+    finally { mesgul(false); }
+  }
+  if (!ceviri) {
+    const r = await aiSor({sistem: SISTEM_CEVIRI, istem: JSON.stringify(metinler), tur: "hizli", durumMetni: "FDA kayıtları Türkçeye çevriliyor…", dogrula});
+    if (!r) return false;
+    ceviri = r.veri;
+  }
+  metinler.forEach((t, i) => { _fdaTr[t] = ceviri[i].trim().slice(0, 600); });
   const anahtarlar = Object.keys(_fdaTr); if (anahtarlar.length > 800) for (const k of anahtarlar.slice(0, anahtarlar.length - 800)) delete _fdaTr[k];
   lsYaz("fdaCeviri", _fdaTr); return true;
 }
