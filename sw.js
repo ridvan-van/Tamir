@@ -1,6 +1,6 @@
 // Uygulama kabuğunu önbelleğe alır; yapay zeka istekleri her zaman ağdan gider.
-const ONBELLEK = "tamir-web-4.5";
-const DOSYALAR = ["./", "./index.html", "./app.js?v=web-4.5", "./manifest.webmanifest", "./ikon-192.png", "./ikon-512.png"];
+const ONBELLEK = "tamir-web-4.6";
+const DOSYALAR = ["./", "./index.html", "./app.js?v=web-4.6", "./manifest.webmanifest", "./ikon-192.png", "./ikon-512.png"];
 self.addEventListener("install", e => {
   // HTTP önbelleğini atla: kurulumda her zaman sunucudaki güncel dosyalar alınsın
   e.waitUntil(caches.open(ONBELLEK).then(c => c.addAll(DOSYALAR.map(u => new Request(u, {cache: "reload"})))));

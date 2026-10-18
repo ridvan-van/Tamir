@@ -1,9 +1,26 @@
-TAMİR ASİSTANI — WEB SÜRÜMÜ 4.5 (telefon + bilgisayar)
+TAMİR ASİSTANI — WEB SÜRÜMÜ 4.6 (telefon + bilgisayar)
 =====================================================
 
 Aynı adres hem telefonda hem bilgisayarda çalışır (Chrome veya Edge).
 GitHub'a YÜKLENECEK DOSYALAR (8 adet): index.html, app.js, sw.js, manifest.webmanifest,
 ikon-192.png, ikon-512.png, KURULUM.txt, LICENSE. ("src" klasörü yalnızca kaynak koddur; yüklemeniz gerekmez.)
+
+4.6'DA YENİ (gerçek modellerle canlı test sonrası)
+- MUHAKEME KURALLARI: parça sökme/devre dışı bırakma önerisinden önce uyumluluk kontrolü (ör. işlemcinin dahili grafiği),
+  her testin neyi kanıtlayıp neyi kanıtlamadığı, belirtiyi açıklayan ucuz testin öne alınması, teknisyenin bilgilerinin
+  dikkate alınması, kaynaksız "datasheet'e göre" yasağı, standart Windows/BIOS kodlarının anlamının söylenmesi.
+  (Canlı testte 3.7 Flash "ekran kartını sök, anakart çıkışını kullan" demişti; aynı model yeni kurallarla
+  "i7-860'ta dahili grafik yok, görüntü alamazsın" dedi.)
+- Sohbetle başlarken teknisyenin ilk anlatımının TAMAMI bağlama girer (önce söktüğü kartlar, işlemci modeli,
+  sağlam sigorta gibi bilgiler kayboluyordu). Kart parça no alanına entegre kodu yazılmaz.
+- KOTA: Gemini ücretsiz katmanda model başına günde ~20 istek var. Kota dolunca program artık turlarca boşuna
+  yeniden denemiyor (önce bir soruda ~20 istek harcanabiliyordu, şimdi en fazla 4); saatlerce bekle diyen kota
+  "günlük" sayılır. Hata mesajı yenilenme saatini söyler.
+- Ölçü aleti ekranı: ikinci bağımsız okuma en fazla 30 sn bekler (önce 150 sn'ye kadar). Flash-Lite ekran
+  okumada sona alındı (canlı testte net "1.823 kΩ" ekranını "OL" okudu; çift okuma + onay bu yüzden var).
+- Groq'ta artık görsel model yok; ölü model adları kaldırıldı.
+- 🔎 Denetçi DENEYSEL ve varsayılan KAPALI: canlı testte gerçek bir hatayı kaçırdı, bir yanlış güvenlik alarmı verdi.
+- Ölçüm noktası adları 80 karaktere kadar, sözcük ortasında kesilmeden; "X - X" tekrarı düzeltildi.
 
 4.5'TE YENİ (uydurma testi sonrası)
 - ✨ Otomatik artık kendi kendine sıralar: her modelin bu cihazdaki son cevap süresi ve hataları izlenir; o an yoğun
