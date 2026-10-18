@@ -1,9 +1,30 @@
-TAMİR ASİSTANI — WEB SÜRÜMÜ 4.0 (telefon + bilgisayar)
+TAMİR ASİSTANI — WEB SÜRÜMÜ 4.5 (telefon + bilgisayar)
 =====================================================
 
 Aynı adres hem telefonda hem bilgisayarda çalışır (Chrome veya Edge).
 GitHub'a YÜKLENECEK DOSYALAR (8 adet): index.html, app.js, sw.js, manifest.webmanifest,
 ikon-192.png, ikon-512.png, KURULUM.txt, LICENSE. ("src" klasörü yalnızca kaynak koddur; yüklemeniz gerekmez.)
+
+4.5'TE YENİ (uydurma testi sonrası)
+- ✨ Otomatik artık kendi kendine sıralar: her modelin bu cihazdaki son cevap süresi ve hataları izlenir; o an yoğun
+  (503) ya da zaman aşımına düşen model 10 dk geriye alınır, en sağlıklı ve hızlı olan önce denenir. Teşhiste
+  Flash-Lite'a kalite payı verilir (diğerleri çok yavaş/hatalı değilse önce onlar). Seçicide "son ölçüm ~X sn" görünür.
+  Elle seçilen model bundan etkilenmez: hep önce o denenir.
+- 🔎 DENETÇİ (Groq gpt-oss-120b, ücretsiz; ✨ penceresinden açılır/kapanır): her teşhis/usta cevabını arka planda
+  inceler; belgeyle doğrulanmamış kesin bilgi (pin, değer, kod anlamı, şifre) ya da güvensiz öneri görürse sohbete
+  not düşer. Temizse hiçbir şey yazmaz, akışı bekletmez. Gerçeği bilmez; yalnızca şüpheyi işaretler.
+- Groq cevap verdiyse (Gemini'ye ulaşılamadığında) mesajın altında "⚠ yedek model cevapladı" yazar: uydurma
+  testinde Groq modeli bir bacak bilgisini kendinden emin şekilde yanlış verdi.
+- Groq'tan kaldırılan llama-3.3-70b modeli listeden çıkarıldı.
+
+4.1–4.4'TE YENİ
+- FDA saha kayıtları Türkçe gösterilir (yapay zeka çevirisi, çeviriler saklanır).
+- Galeriden tek seferde en fazla 10 fotoğraf.
+- Pro erişimi kendiliğinden algılanır: anahtarda Pro yoksa (ücretsiz katman) 24 saat denenmez, bekleme olmaz.
+  ✨ penceresinde "Pro açık/kapalı" ve "🔄 Pro'yu yeniden kontrol et". 403 hatası artık modelleri kilitlemez.
+- Model sırası 18 Eki 2026 hız ölçümüne göre: Pro → 3.6 Flash (~10 sn) → 3.5 Flash-Lite (~2 sn) → 3.8 / 3.7 Flash
+  (ölçümde sunucuda 40–80 sn bekletti). Tür anlama ve çeviri önce Flash-Lite'a gider. Elle seçilen model
+  100 sn'ye kadar beklenir (yarıda kesilip başka modele geçilmez).
 
 4.0'DA YENİ (sohbet arayüzü)
 1) SOHBET MODU (varsayılan): Açılışta kamera KAPALIDIR; ekran sohbettir. Arızayı yazmanız yeterli.
